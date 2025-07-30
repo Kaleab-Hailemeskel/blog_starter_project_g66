@@ -1,6 +1,9 @@
 package controllers
 
-import "time"
+import (
+	domain "blog_starter_project_g66/Domain"
+	"time"
+)
 
 const (
 	ADMIN       = "ADMIN"
@@ -19,7 +22,6 @@ type UserDTO struct {
 	Password       string `json:"password" bson:"password"` // securely hashed
 	Role           string `json:"role" bson:"role"`         // values: "admin", "user", "super_admin"
 }
-
 type BlogDTO struct {
 	BlogID      string    `json:"blog_id" bson:"blog_id"`
 	OwnerID     string    `json:"owner_id" bson:"owner_id"` // references UserID
@@ -29,7 +31,6 @@ type BlogDTO struct {
 	Description string    `json:"description" bson:"description"`
 	LastUpdate  time.Time `json:"last_update_time" bson:"last_update_time"`
 }
-
 type PopularityDTO struct {
 	PopularityID string   `json:"popularity_id" bson:"popularity_id"`
 	BlogID       string   `json:"blog_id" bson:"blog_id"`
@@ -37,4 +38,41 @@ type PopularityDTO struct {
 	Likes        []string `json:"likes" bson:"likes"`       // list of user_ids — deduplicate before insert
 	Dislikes     []string `json:"dislikes" bson:"dislikes"` // list of user_ids — same
 	Comments     []string `json:"comments" bson:"comments"` // comment IDs or plain content
+}
+
+func changeToDomainUser(udto *UserDTO) *domain.User {
+	return &domain.User{
+		UserID:         udto.UserID,
+		UserName:       udto.UserName,
+		PersonalBio:    udto.PersonalBio,
+		ProfilePic:     udto.ProfilePic,
+		Email:          udto.Email,
+		PhoneNum:       udto.PhoneNum,
+		TelegramHandle: udto.TelegramHandle,
+		Password:       udto.Password,
+		Role:           udto.Role,
+	}
+}
+
+func changeToDomainBlog(bdto *BlogDTO) *domain.Blog {
+	return &domain.Blog{
+		BlogID:      bdto.BlogID,
+		OwnerID:     bdto.OwnerID,
+		Title:       bdto.Title,
+		Tags:        bdto.Tags,
+		Author:      bdto.Author,
+		Description: bdto.Description,
+		LastUpdate:  bdto.LastUpdate,
+	}
+}
+
+func changeToDomainPopularity(pdto *PopularityDTO) *domain.Popularity {
+	return &domain.Popularity{
+		PopularityID: pdto.PopularityID,
+		BlogID:       pdto.BlogID,
+		ViewCount:    pdto.ViewCount,
+		Likes:        pdto.Likes,
+		Dislikes:     pdto.Dislikes,
+		Comments:     pdto.Comments,
+	}
 }
