@@ -30,7 +30,7 @@ func (uc *UserController) Registration(ctx *gin.Context){
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
-	err := uc.UserUsecase.HandleRegistration()
+	err := uc.UserUsecase.HandleRegistration(changeToDomainUser(user))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
