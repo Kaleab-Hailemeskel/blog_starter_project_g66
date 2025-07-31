@@ -38,3 +38,9 @@ type Popularity struct {
 	Dislikes     []string
 	Comments     []string
 }
+
+type Filter struct {
+	Popularity_value int
+	Tag              string
+	AfterDate        time.Time
+}

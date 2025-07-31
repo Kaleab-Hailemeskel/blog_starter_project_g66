@@ -40,7 +40,20 @@ type PopularityDTO struct {
 	Comments     []string `json:"comments" bson:"comments"` // comment IDs or plain content
 }
 
-func changeToDomainUser(udto *UserDTO) *domain.User {
+func ChangeToDTOUserfunc(domainUser *domain.User) *UserDTO {
+	return &UserDTO{
+		UserID:         domainUser.UserID,
+		UserName:       domainUser.UserName,
+		PersonalBio:    domainUser.PersonalBio,
+		ProfilePic:     domainUser.ProfilePic,
+		Email:          domainUser.Email,
+		PhoneNum:       domainUser.PhoneNum,
+		TelegramHandle: domainUser.TelegramHandle,
+		Password:       domainUser.Password,
+		Role:           domainUser.Role,
+	}
+}
+func ChangeToDomainUser(udto *UserDTO) *domain.User {
 	return &domain.User{
 		UserID:         udto.UserID,
 		UserName:       udto.UserName,
@@ -54,7 +67,7 @@ func changeToDomainUser(udto *UserDTO) *domain.User {
 	}
 }
 
-func changeToDomainBlog(bdto *BlogDTO) *domain.Blog {
+func ChangeToDomainBlog(bdto *BlogDTO) *domain.Blog {
 	return &domain.Blog{
 		BlogID:      bdto.BlogID,
 		OwnerID:     bdto.OwnerID,
@@ -65,9 +78,29 @@ func changeToDomainBlog(bdto *BlogDTO) *domain.Blog {
 		LastUpdate:  bdto.LastUpdate,
 	}
 }
-
-func changeToDomainPopularity(pdto *PopularityDTO) *domain.Popularity {
+func ChangeToDTOBlog(bdto *domain.Blog) *BlogDTO {
+	return &BlogDTO{
+		BlogID:      bdto.BlogID,
+		OwnerID:     bdto.OwnerID,
+		Title:       bdto.Title,
+		Tags:        bdto.Tags,
+		Author:      bdto.Author,
+		Description: bdto.Description,
+		LastUpdate:  bdto.LastUpdate,
+	}
+}
+func ChangeToDomainPopularity(pdto *PopularityDTO) *domain.Popularity {
 	return &domain.Popularity{
+		PopularityID: pdto.PopularityID,
+		BlogID:       pdto.BlogID,
+		ViewCount:    pdto.ViewCount,
+		Likes:        pdto.Likes,
+		Dislikes:     pdto.Dislikes,
+		Comments:     pdto.Comments,
+	}
+}
+func ChangeToDTOPopularity(pdto *domain.Popularity) *PopularityDTO {
+	return &PopularityDTO{
 		PopularityID: pdto.PopularityID,
 		BlogID:       pdto.BlogID,
 		ViewCount:    pdto.ViewCount,

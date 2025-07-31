@@ -1,7 +1,5 @@
 package domain
 
-import "time"
-
 type UserRepository interface {
 	Create(user *User) error
 	Login(email, password string) (*User, error) //authenticate and return user
@@ -11,10 +9,9 @@ type UserRepository interface {
 type IUserRepository interface {
 	CreateBlog(blog *Blog) error
 	DeleteBlogByID(blogID string) error
-	UpdateBlog(blogID string, updatedBlog *Blog) error
-	GetAllBlogs(indexBlogID *string) (*[]Blog, error) // i used indexBlog ID for pagination puposes, and *string arg is needed to pass nil for the firstRequest request, after that the user will have the hashed indexed, and will be able to access next databases after the lastIndexBlog
-	GetAllBlogsByFilter(tagFilter string, dateFilter time.Time, popularityValue int, indexBlog *string) (*[]Blog, error)
-	GetByID(blogID string) (*Blog, error)
+	UpdateBlogByID(blogID string, updatedBlog *Blog) error
+	GetAllBlogs(pageNumber int) (*[]Blog, error) // i used pageNumber for pagination so that large contents accessed by page number for the firstRequest request, after that the user will have the hashed indexed, and will be able to access next databases after the lastIndexBlog
+	GetAllBlogsByFilter(filter Filter, pageNumber int) (*[]Blog, error)
 	CheckBlogExistance(blogID string) bool
 	CloseDataBase() error
 }
