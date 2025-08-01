@@ -1,4 +1,4 @@
-package controllers
+package domain
 
 import (
 	"time"
@@ -6,21 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const (
-	ADMIN       = "ADMIN"
-	UESR        = "USER"
-	SUPER_ADMIN = "SUPER_ADMIN"
-)
-
-type UserUnverifiedDTO struct{
-
-	UserName string `json: "username" bson: "username"`
-	Email string `json: "email" bson: "email"`
-	Password string `json: "password" bson: "password"`
-	OTP string `json:"otp" bson: "otp"`
-	ExpiresAt time.Time `json:"expires_at" bson:"expires_at"`
-
-}
 type UserDTO struct {
 	UserID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserName       string             `json:"user_name" bson:"user_name"`
