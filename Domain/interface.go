@@ -21,3 +21,11 @@ type IBlogRepository interface {
 	CheckBlogExistance(blogID primitive.ObjectID) bool
 	CloseDataBase() error
 }
+
+type IBlogUseCase interface {
+	CreateBlog(blog *Blog, userEmail string) error
+	DeleteBlogByID(blogID string) error // the controller will pass the a string from the url the usecase will change it to the objectID
+	UpdateBlogByID(blogID string, updatedBlog *Blog) error
+	// page number needed for the purpose of pagination
+	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*controllers.BlogDTO, error)
+}

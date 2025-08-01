@@ -69,7 +69,7 @@ func (bldb *BlogDB) DeleteBlogByID(blogID primitive.ObjectID) error {
 }
 
 func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domain.Blog) error {
-
+	// I don't want to check the existance of the blog before updating, b/c the updateOne will tell us if there weren't any changes mamde afterall
 	filter := bson.M{"_id": blogID}
 
 	// Create an update document using $set to update specific fields.
