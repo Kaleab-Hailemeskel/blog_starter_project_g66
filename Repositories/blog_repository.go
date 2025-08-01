@@ -55,7 +55,15 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) err
 	}
 	return nil
 }
-
+func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.Blog, error) {
+	filter := bson.M{"_id": blogID}
+	var blog domain.Blog
+	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&blog)
+	if err != nil {
+		return nil, err
+	}
+	return &blog, nil
+}
 func (bldb *BlogDB) DeleteBlogByID(blogID primitive.ObjectID) error {
 	filter := bson.M{"_id": blogID}
 	result, err := bldb.Coll.DeleteOne(bldb.Contxt, filter)
@@ -144,7 +152,6 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 }
 
 func (bldb *BlogDB) CheckBlogExistance(blogID primitive.ObjectID) bool {
-
 	filter := bson.M{"_id": blogID}
 	count, err := bldb.Coll.CountDocuments(bldb.Contxt, filter)
 	if err != nil {
