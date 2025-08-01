@@ -1,12 +1,12 @@
 package usecases
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 	"errors"
 	"time"
 )
 
-type UserUsecase struct{
+type UserUsecase struct {
 	userinterface domain.IUserRepository
 	userVaildate domain.IUserValidation
 	userOTP domain.IUserOTP 
@@ -22,10 +22,10 @@ func NewUserUsecase(ui domain.IUserRepository,uv domain.IUserValidation, uo doma
 	}
 }
 
-func (uc *UserUsecase)HandleRegistration(user *domain.User)error{
-	existing, _ := uc.userinterface.FetchByEmail(user.Email)
+func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
+	existing := uc.userinterface.CheckUserExistance(user.Email)
 
-	if !existing{
+	if !existing {
 		return errors.New("user already exists")
 	}
 

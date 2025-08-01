@@ -1,12 +1,11 @@
 package conv
 
 import (
-	"blog_starter_project_g66/Delivery/controllers"
 	domain "blog_starter_project_g66/Domain"
 )
 
-func ChangeToDTOUserfunc(domainUser *domain.User) *controllers.UserDTO {
-	return &controllers.UserDTO{
+func ChangeToDTOUserfunc(domainUser *domain.User) *domain.UserDTO {
+	return &domain.UserDTO{
 		UserName:       domainUser.UserName,
 		PersonalBio:    domainUser.PersonalBio,
 		ProfilePic:     domainUser.ProfilePic,
@@ -17,7 +16,7 @@ func ChangeToDTOUserfunc(domainUser *domain.User) *controllers.UserDTO {
 		Role:           domainUser.Role,
 	}
 }
-func ChangeToDomainUser(udto *controllers.UserDTO) *domain.User {
+func ChangeToDomainUser(udto *domain.UserDTO) *domain.User {
 	return &domain.User{
 		UserName:       udto.UserName,
 		PersonalBio:    udto.PersonalBio,
@@ -30,7 +29,7 @@ func ChangeToDomainUser(udto *controllers.UserDTO) *domain.User {
 	}
 }
 
-func ChangeToDomainBlog(bdto *controllers.BlogDTO) *domain.Blog {
+func ChangeToDomainBlog(bdto *domain.BlogDTO) *domain.Blog {
 	return &domain.Blog{
 		Title:       bdto.Title,
 		Tags:        bdto.Tags,
@@ -39,8 +38,8 @@ func ChangeToDomainBlog(bdto *controllers.BlogDTO) *domain.Blog {
 		LastUpdate:  bdto.LastUpdate,
 	}
 }
-func ChangeToDTOBlog(bdto *domain.Blog) *controllers.BlogDTO {
-	return &controllers.BlogDTO{
+func ChangeToDTOBlog(bdto *domain.Blog) *domain.BlogDTO {
+	return &domain.BlogDTO{
 		Title:       bdto.Title,
 		Tags:        bdto.Tags,
 		Author:      bdto.Author,
@@ -48,7 +47,7 @@ func ChangeToDTOBlog(bdto *domain.Blog) *controllers.BlogDTO {
 		LastUpdate:  bdto.LastUpdate,
 	}
 }
-func ChangeToDomainPopularity(pdto *controllers.PopularityDTO) *domain.Popularity {
+func ChangeToDomainPopularity(pdto *domain.PopularityDTO) *domain.Popularity {
 	return &domain.Popularity{
 		ViewCount: pdto.ViewCount,
 		Likes:     pdto.Likes,
@@ -57,36 +56,36 @@ func ChangeToDomainPopularity(pdto *controllers.PopularityDTO) *domain.Popularit
 	}
 }
 
-func ChangeToDTOPopularity(pdto *domain.Popularity) *controllers.PopularityDTO {
-	return &controllers.PopularityDTO{
+func ChangeToDTOPopularity(pdto *domain.Popularity) *domain.PopularityDTO {
+	return &domain.PopularityDTO{
 		ViewCount: pdto.ViewCount,
 		Likes:     pdto.Likes,
 		Dislikes:  pdto.Dislikes,
 		Comments:  changeToListDTOComment(pdto.Comments),
 	}
 }
-func ChangeToDomainComment(cdto *controllers.CommentDTO) *domain.Comment {
+func ChangeToDomainComment(cdto *domain.CommentDTO) *domain.Comment {
 	return &domain.Comment{
 		UserName: cdto.UserName,
 		Comment:  cdto.Comment,
 	}
 }
-func ChangeToDTOComment(cdto *domain.Comment) *controllers.CommentDTO {
-	return &controllers.CommentDTO{
+func ChangeToDTOComment(cdto *domain.Comment) *domain.CommentDTO {
+	return &domain.CommentDTO{
 		UserName: cdto.UserName,
 		Comment:  cdto.Comment,
 	}
 }
 
-func changeToListDomainComment(lctdo []*controllers.CommentDTO) []*domain.Comment {
+func changeToListDomainComment(lctdo []*domain.CommentDTO) []*domain.Comment {
 	var listDomainComment []*domain.Comment
 	for _, val := range lctdo {
 		listDomainComment = append(listDomainComment, ChangeToDomainComment(val))
 	}
 	return listDomainComment
 }
-func changeToListDTOComment(lctdo []*domain.Comment) []*controllers.CommentDTO {
-	var listDTOComment []*controllers.CommentDTO
+func changeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
+	var listDTOComment []*domain.CommentDTO
 	for _, val := range lctdo {
 		listDTOComment = append(listDTOComment, ChangeToDTOComment(val))
 	}

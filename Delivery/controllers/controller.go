@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	conv "blog_starter_project_g66/Delivery/converter"
+	domain "blog_starter_project_g66/Domain"
 	usecases "blog_starter_project_g66/Usecases"
 	"net/http"
 
@@ -18,7 +20,7 @@ func NewUserUsecase(uuc *usecases.UserUsecase) *UserController {
 }
 func (uc *UserController) Registration(ctx *gin.Context) {
 
-	var user *UserDTO
+	var user *domain.UserDTO
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
@@ -30,8 +32,7 @@ func (uc *UserController) Registration(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
-
-	err := uc.UserUsecase.HandleRegistration(changeToDomainUser(user))
+	err := uc.UserUsecase.HandleRegistration(conv.ChangeToDomainUser(user))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
