@@ -1,6 +1,23 @@
 package domain
+
+import (
+	"blog_starter_project_g66/Delivery/controllers"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 type UserRepository interface {
 	Create(user *User) error
 	Login(email, password string) (*User, error) //authenticate and return user
-	FetchByEmail(email string) (bool, error) //checks if user exisits or not
+	FetchByEmail(email string) (bool, error)     //checks if user exisits or not
+}
+
+type IBlogRepository interface {
+	CreateBlog(blog *Blog, userID primitive.ObjectID) error
+	DeleteBlogByID(blogID primitive.ObjectID) error
+	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
+	// page number needed for the purpose of pagination
+	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*controllers.BlogDTO, error)
+	CheckBlogExistance(blogID primitive.ObjectID) bool
+	CloseDataBase() error
 }
