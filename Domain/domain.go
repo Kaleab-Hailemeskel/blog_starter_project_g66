@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ADMIN       = "ADMIN"
@@ -9,7 +11,6 @@ const (
 )
 
 type User struct {
-	UserID         string
 	UserName       string
 	PersonalBio    string
 	ProfilePic     string
@@ -21,8 +22,6 @@ type User struct {
 }
 
 type Blog struct {
-	BlogID      string
-	OwnerID     string
 	Title       string
 	Tags        []string
 	Author      string
@@ -31,10 +30,22 @@ type Blog struct {
 }
 
 type Popularity struct {
-	PopularityID string
-	BlogID       string
-	ViewCount    int
-	Likes        []string
-	Dislikes     []string
-	Comments     []string
+	ViewCount int
+	Likes     []string
+	Dislikes  []string
+	Comments  []*Comment
+}
+
+type Comment struct {
+	UserName string
+	Comment  string
+}
+
+// I added the filter struct, b/c while filtering I was passing around 4 parameters at once so now 5 of them are in one struct it will be easy to pass arguments
+type Filter struct {
+	Popularity_value int
+	Tag              string
+	AfterDate        time.Time
+	AuthorName       string
+	Title            string
 }
