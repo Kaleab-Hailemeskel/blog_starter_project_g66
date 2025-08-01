@@ -4,14 +4,12 @@ package domain
 type IUserRepository interface {
 
 import (
-	"blog_starter_project_g66/Delivery/controllers"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	FetchByEmail(userEmail string) (*User, error) //checks if user exisits or not
+	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
 	CheckUserExistance(userEmail string) bool
 	CloseDataBase() error
 }
@@ -29,7 +27,7 @@ type IBlogRepository interface {
 	DeleteBlogByID(blogID primitive.ObjectID) error
 	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
-	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*controllers.BlogDTO, error)
+	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
 	CheckBlogExistance(blogID primitive.ObjectID) bool
 	CloseDataBase() error
 
@@ -40,5 +38,5 @@ type IBlogUseCase interface {
 	DeleteBlogByID(blogID string) error // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
-	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*controllers.BlogDTO, error)
+	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
 }

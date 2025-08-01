@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"blog_starter_project_g66/Delivery/controllers"
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
 	"context"
@@ -101,10 +100,7 @@ func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domai
 	return nil
 }
 
-func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*controllers.BlogDTO, error) {
-	if pageNumber < 1 {
-		pageNumber = 1
-	}
+func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
 	skip := int64((pageNumber - 1) * pageSize)
 	limit := int64(pageSize)
 
@@ -134,9 +130,9 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	}
 	defer cursor.Close(bldb.Contxt)
 
-	var blogs []*controllers.BlogDTO
+	var blogs []*domain.BlogDTO
 	for cursor.Next(bldb.Contxt) {
-		var blogDTO controllers.BlogDTO // Change target type to DTO for decoding
+		var blogDTO domain.BlogDTO // Change target type to DTO for decoding
 
 		if err := cursor.Decode(&blogDTO); err != nil {
 			return nil, fmt.Errorf("error decoding filtered blog DTO: %w", err)

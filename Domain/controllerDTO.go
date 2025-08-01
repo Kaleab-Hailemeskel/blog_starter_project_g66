@@ -1,15 +1,9 @@
-package controllers
+package domain
 
 import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
-const (
-	ADMIN       = "ADMIN"
-	UESR        = "USER"
-	SUPER_ADMIN = "SUPER_ADMIN"
 )
 
 type UserDTO struct {
