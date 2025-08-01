@@ -1,13 +1,14 @@
 package repositories
 
 import (
-    "context"
-    "go.mongodb.org/mongo-driver/mongo"
-    "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/Domain"
+	"context"
+	"go.mongodb.org/mongo-driver/mongo"
+    
 )
 
 type UserRepository struct {
-    collection *mongo.Collection
+   collection *mongo.Collection
 }
 
 

@@ -11,6 +11,7 @@ func Router(uc *controllers.UserController) {
 
 	router.POST("/login",)
 	router.POST("/registration", uc.Registration)
+	router.POST("/registration/verification", )
 	router.POST("/foget_password",)
 	router.POST("/logout",)
 	router.PUT("/editprofile")

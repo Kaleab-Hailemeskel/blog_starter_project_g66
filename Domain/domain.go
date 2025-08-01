@@ -8,6 +8,12 @@ const (
 	SUPER_ADMIN = "SUPER_ADMIN"
 )
 
+type UserUnverified struct {
+	Email string
+	OTP string
+	ExpiresAt time.Time
+}
+
 type User struct {
 	UserID         string
 	UserName       string

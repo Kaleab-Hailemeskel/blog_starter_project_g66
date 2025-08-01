@@ -11,6 +11,15 @@ const (
 	SUPER_ADMIN = "SUPER_ADMIN"
 )
 
+type UserUnverifiedDTO struct{
+
+	UserName string `json: "username" bson: "username"`
+	Email string `json: "email" bson: "email"`
+	Password string `json: "password" bson: "password"`
+	OTP string `json:"otp" bson: "otp"`
+	ExpiresAt time.Time `json:"expires_at" bson:"expires_at"`
+
+}
 type UserDTO struct {
 	UserID         string `json:"user_id" bson:"user_id"`
 	UserName       string `json:"user_name" bson:"user_name"`
@@ -75,4 +84,12 @@ func changeToDomainPopularity(pdto *PopularityDTO) *domain.Popularity {
 		Dislikes:     pdto.Dislikes,
 		Comments:     pdto.Comments,
 	}
+}
+
+func changeToDomainVerification(udto *UserUnverifiedDTO) *domain.UserUnverified{
+    return &domain.UserUnverified{
+        Email:     udto.Email,
+        OTP:       udto.OTP,
+        ExpiresAt: udto.ExpiresAt,
+    }
 }
