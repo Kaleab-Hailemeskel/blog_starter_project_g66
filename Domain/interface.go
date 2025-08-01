@@ -1,8 +1,5 @@
 package domain
 
-
-type IUserRepository interface {
-
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -10,10 +7,11 @@ import (
 type IUserRepository interface { // eka was here
 	Create(user *User) error
 	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	UpdatePassword(userEmail string, updatedPassword string) error
+	EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	CheckUserExistance(userEmail string) bool
 	CloseDataBase() error
 }
-
 
 type IUserValidation interface {
 	IsValidEmail(email string) bool
@@ -30,7 +28,6 @@ type IBlogRepository interface {
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
 	CheckBlogExistance(blogID primitive.ObjectID) bool
 	CloseDataBase() error
-
 }
 
 type IBlogUseCase interface {

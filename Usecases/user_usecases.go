@@ -1,25 +1,25 @@
 package usecases
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 	"errors"
 )
 
-type UserUsecase struct{
+type UserUsecase struct {
 	userinterface domain.IUserRepository
-	userVaildate domain.IUserValidation
+	userVaildate  domain.IUserValidation
 }
 
-func NewUserUsecase(ui domain.IUserRepository) *UserUsecase{
+func NewUserUsecase(ui domain.IUserRepository) *UserUsecase {
 	return &UserUsecase{
 		userinterface: ui,
 	}
 }
 
-func (uc *UserUsecase)HandleRegistration(user *domain.User)error{
-	existing, _ := uc.userinterface.
+func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
+	existing := uc.userinterface.CheckUserExistance(user.Email)
 
-	if !existing{
+	if !existing {
 		return errors.New("user already exists")
 	}
 
