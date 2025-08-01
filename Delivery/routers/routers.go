@@ -18,11 +18,11 @@ func Router(uc *controllers.UserController) {
 	router.POST("/blog",)
 	router.GET("/blog",)
 	router.GET("/blog/filter",)
-	router.PUT("/blog/:id",)
-	router.DELETE("/blog/:id",)
-	router.POST("/blog/sreach",)
-	router.POST("/ai",)
-	router.POST("/ai/:id",)
+	// router.PUT("/blog/:id",)
+	// router.DELETE("/blog/:id",)
+	// router.POST("/blog/sreach",)
+	// router.POST("/ai",)
+	// router.POST("/ai/:id",)
 
 	router.Run()
 }
