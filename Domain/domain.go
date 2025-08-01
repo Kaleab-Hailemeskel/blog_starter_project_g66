@@ -41,7 +41,7 @@ type Comment struct {
 	Comment  string
 }
 
-// I added the filter struct, b/c while filtering I was passing around 4 parameters at once so now 3 of them are in one struct it will be easy to pass arguments
+// I added the filter struct, b/c while filtering I was passing around 4 parameters at once so now 5 of them are in one struct it will be easy to pass arguments
 type Filter struct {
 	Popularity_value int
 	Tag              string
