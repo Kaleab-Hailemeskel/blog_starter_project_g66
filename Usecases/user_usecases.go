@@ -17,7 +17,7 @@ func NewUserUsecase(ui domain.IUserRepository) *UserUsecase{
 }
 
 func (uc *UserUsecase)HandleRegistration(user *domain.User)error{
-	existing, _ := uc.userinterface.FetchByEmail(user.Email)
+	existing, _ := uc.userinterface.
 
 	if !existing{
 		return errors.New("user already exists")
