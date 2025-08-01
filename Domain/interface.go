@@ -1,5 +1,8 @@
 package domain
 
+
+type IUserRepository interface {
+
 import (
 	"blog_starter_project_g66/Delivery/controllers"
 
@@ -13,6 +16,13 @@ type IUserRepository interface { // eka was here
 	CloseDataBase() error
 }
 
+
+type IUserValidation interface {
+	IsValidEmail(email string) bool
+	IsStrongPassword(password string) bool
+	Hashpassword(password string) string
+	ComparePassword(userPassword, password string) error
+}
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
 	FindBlogByID(blogID primitive.ObjectID) (*Blog, error)
@@ -22,6 +32,7 @@ type IBlogRepository interface {
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*controllers.BlogDTO, error)
 	CheckBlogExistance(blogID primitive.ObjectID) bool
 	CloseDataBase() error
+
 }
 
 type IBlogUseCase interface {
