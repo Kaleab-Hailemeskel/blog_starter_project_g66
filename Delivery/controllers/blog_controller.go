@@ -74,5 +74,11 @@ func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	ctx.IndentedJSON(http.StatusAccepted, gin.H{"message":"blog Updated"})
+	ctx.IndentedJSON(http.StatusAccepted, gin.H{"message": "blog Updated"})
 }
+
+// ? From Popularity
+func (cntrl *BlogController) LikeBlog(ctx *gin.Context)     {}
+func (cntrl *BlogController) DisLikeBlog(ctx *gin.Context)  {}
+func (cntrl *BlogController) CommentBlog(ctx *gin.Context)  {}
+func (cntrl *BlogController) IncreaseView(ctx *gin.Context) {}
