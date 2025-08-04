@@ -11,7 +11,7 @@ type BlogUseCase struct {
 	UserDataBase domain.IUserRepository
 }
 
-func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository) domain.IBlogUseCase {
+func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository) *BlogUseCase {
 	return &BlogUseCase{
 		BlogDataBase: blogRepo,
 		UserDataBase: userRepo,
