@@ -27,7 +27,7 @@ type IBlogRepository interface {
 	// page number needed for the purpose of pagination
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
 	CheckBlogExistance(blogID primitive.ObjectID) bool
-	CloseDataBase() error
+	CloseDataBase() error 
 }
 
 type IBlogUseCase interface {
