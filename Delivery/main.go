@@ -15,7 +15,7 @@ import (
 
 func main() {
 	godotenv.Load()
-	mongoURI := os.Getenv("MONGO_CONNECTION_STRING")
+	
 	jwtSecret := os.Getenv("JWT_SECERT")
 
 	host := os.Getenv("SMTP_HOST")
