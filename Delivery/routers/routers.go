@@ -6,12 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Router(uc *controllers.UserController) {
+func Router(uc *controllers.UserController, pc *controllers.PasswordController) {
 	router := gin.Default()
 
 	router.POST("/login",)
 	router.POST("/registration", uc.Registration)
-	router.POST("/foget_password",)
+	router.POST("/forgot_password",pc.ForgotPassword)
+	router.PUT("/reset_password",pc.ResetPassword)
 	router.POST("/logout",)
 	router.PUT("/editprofile")
 	router.POST("/blog",)

@@ -5,13 +5,13 @@ import (
 )
 
 type IUserRepository interface { // eka was here
-	Create(user *User) error
-	EditUserByEmail(userEmail string, updatedUserInfo *User) error
-	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
-	CheckUserExistance(userEmail string) bool
+	// Create(user *User) error
+	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
+	// FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	// CheckUserExistance(userEmail string) bool
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
-	CloseDataBase() error
+	// CloseDataBase() error
 }
 
 type IUserValidation interface {

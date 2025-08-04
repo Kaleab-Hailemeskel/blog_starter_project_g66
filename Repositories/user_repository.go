@@ -10,11 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type MongouserRepository struct {
+type IUserRepository struct {
 	collection *mongo.Collection
 }
 
-func (r *MongouserRepository) FindByEmail(email string) (*domain.UserDTO, error) {
+func INewUserRepository(dbClient *MongoDBClient) *IUserRepository {
+    db := dbClient.Client.Database("user_db") 
+    return &IUserRepository{
+        collection: db.Collection("users"), 
+    }
+}
+
+func (r *IUserRepository) FindByEmail(email string) (*domain.UserDTO, error) {
 	var user domain.UserDTO
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -26,7 +33,7 @@ func (r *MongouserRepository) FindByEmail(email string) (*domain.UserDTO, error)
 
 }
 
-func (r *MongouserRepository) UpdatePassword(userID, hashedPassword string) error {
+func (r *IUserRepository) UpdatePassword(userID, hashedPassword string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
