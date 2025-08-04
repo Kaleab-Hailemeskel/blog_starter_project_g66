@@ -91,3 +91,10 @@ func changeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
 	}
 	return listDTOComment
 }
+func ChangeToDomainVerification(udto *domain.UserUnverifiedDTO) *domain.UserUnverified{
+    return &domain.UserUnverified{
+        Email:     udto.Email,
+        OTP:       udto.OTP,
+        ExpiresAt: udto.ExpiresAt,
+    }
+}

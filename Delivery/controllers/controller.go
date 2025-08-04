@@ -45,7 +45,7 @@ func (uc *UserController) Registration(ctx *gin.Context) {
 }
 
 func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
-	var user *UserUnverifiedDTO
+	var user *domain.UserUnverifiedDTO
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
@@ -57,10 +57,20 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
-	vaild, err := uc.UserUsecase.VerifyOTP(user.Email, user.OTP)
-	if err != nil ||!vaild {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error(),
-	"message":"invalid otp"})
+	userone := conv.ChangeToDomainVerification(user)
+	valid, err := uc.UserUsecase.VerifyOTP(userone.Email, userone.OTP)
+	if err != nil {
+	ctx.JSON(http.StatusInternalServerError, gin.H{
+		"error": err.Error(),
+		"message": "Error while verifying OTP",
+	})
+		return
+	}
+
+	if !valid {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid or expired OTP",
+		})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "User verified successfully"})

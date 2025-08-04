@@ -2,9 +2,23 @@ package infrastructure
 
 import (
 	"regexp"
+
 	"golang.org/x/crypto/bcrypt"
 )
-func IsStrongPassword(password string) bool {
+
+type PasswordService struct {
+}
+
+func NewPasswordService() *PasswordService {
+	return &PasswordService{}
+}
+func (p *PasswordService) IsValidEmail(email string) bool {
+
+	regex := `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`
+	re := regexp.MustCompile(regex)
+	return re.MatchString(email)
+}
+func (p *PasswordService) IsStrongPassword(password string) bool {
 	var (
 		uppercase = `[A-Z]`
 		lowercase = `[a-z]`
@@ -23,15 +37,14 @@ func IsStrongPassword(password string) bool {
 	return hasUpper && hasLower && hasNumber && hasSpecial
 }
 
+func (p *PasswordService) Hashpassword(password string) string {
 
-func Hashpassword(password string) string {
-
-	hashpassword, _:= bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashpassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 	return string(hashpassword)
 }
 
-func ComparePassword(userPassword, password string)  error{
+func (p *PasswordService) ComparePassword(userPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(password))
 	return err
 }

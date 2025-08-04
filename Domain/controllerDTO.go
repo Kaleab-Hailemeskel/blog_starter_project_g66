@@ -6,6 +6,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type UserUnverifiedDTO struct{
+	Email string `json: "email" bson: "email"`
+	OTP string		`json: "otp" bson:"otp"`
+	ExpiresAt time.Time	`json: "expires_at" bson:"expires_at"`
+
+}
+
 type UserDTO struct {
 	UserID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserName       string             `json:"user_name" bson:"user_name"`
@@ -41,10 +48,3 @@ type CommentDTO struct {
 	Comment  string             `json:"comment" bson:"comment"`
 }
 
-func changeToDomainVerification(udto *UserUnverifiedDTO) *domain.UserUnverified{
-    return &domain.UserUnverified{
-        Email:     udto.Email,
-        OTP:       udto.OTP,
-        ExpiresAt: udto.ExpiresAt,
-    }
-}

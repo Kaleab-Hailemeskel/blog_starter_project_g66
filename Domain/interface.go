@@ -4,11 +4,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
-	UpdatePassword(userEmail string, updatedPassword string) error
-	EditUserByEmail(userEmail string, updatedUserInfo *User) error
+	// FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	// UpdatePassword(userEmail string, updatedPassword string) error
+	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	CheckUserExistance(userEmail string) bool
 	CloseDataBase() error
 }
@@ -23,6 +24,11 @@ type IUserOTP interface {
 	StoreOTP(entry UserUnverified) error
 	FindOTP(email string) (*UserUnverified, error)
 	DeleteOTP(email string) error
+}
+type IEmailService interface {
+    Send( email string, token string) error
+	// SendPasswordReset(to string, subject string, body string) error
+	GenerateRandomOTP() string 
 }
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error

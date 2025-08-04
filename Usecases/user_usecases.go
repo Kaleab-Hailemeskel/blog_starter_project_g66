@@ -10,24 +10,25 @@ type UserUsecase struct {
 	userinterface domain.IUserRepository
 	userVaildate domain.IUserValidation
 	userOTP domain.IUserOTP 
-	generateotp domain.GenerateOTP
+	generateotp domain.IEmailService
 
 }
 
-func NewUserUsecase(ui domain.IUserRepository,uv domain.IUserValidation, uo domain.IUserOTP) *UserUsecase{
+func NewUserUsecase(ui domain.IUserRepository,uv domain.IUserValidation, uo domain.IUserOTP, emailService domain.IEmailService) *UserUsecase{
 	return &UserUsecase{
 		userinterface: ui,
 		userVaildate: uv,
 		userOTP: uo,
+		generateotp: emailService,
 	}
 }
 
 func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 	existing := uc.userinterface.CheckUserExistance(user.Email)
 
-	if !existing {
+	if existing {
 		return errors.New("user already exists")
-	}
+	} 
 
 	isvaild_email := uc.userVaildate.IsValidEmail(user.Email)
 	ispassword_strong := uc.userVaildate.IsStrongPassword(user.Password)
@@ -39,7 +40,7 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 	hashpassword := uc.userVaildate.Hashpassword(user.Password)
 	user.Password = hashpassword
 
-	err := uc.userinterface.Create("user_unverified",user)
+	err := uc.userinterface.Create(user)
 	if err != nil {
 		return err
 	}
