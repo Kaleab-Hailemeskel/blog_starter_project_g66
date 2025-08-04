@@ -8,6 +8,8 @@ type IUserRepository interface { // eka was here
 	Create(user *User) error
 	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
 	CheckUserExistance(userEmail string) bool
+	DemoteUser(userEmail string) error
+	PromoteUser(userEmail string) error
 	CloseDataBase() error
 }
 
@@ -23,7 +25,7 @@ type IBlogRepository interface {
 }
 
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) error
+	CreateBlog(blog *Blog, userEmail string) error //! Instead of userEmail as string we can pass userID instantly 
 	DeleteBlogByID(blogID string) error // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
