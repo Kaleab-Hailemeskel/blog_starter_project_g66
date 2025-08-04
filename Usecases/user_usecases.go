@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/Domain"
 	"errors"
 	"time"
 )
@@ -40,12 +40,9 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 	hashpassword := uc.userVaildate.Hashpassword(user.Password)
 	user.Password = hashpassword
 
-	err := uc.userinterface.Create(user)
-	if err != nil {
-		return err
-	}
+	
 
-	err = uc.SendOTP(user.Email)
+	err := uc.SendOTP(user)
 
 	if err != nil {
 		return errors.New("failed to send OTP: " + err.Error())
@@ -53,15 +50,18 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 
 	return nil
 }
-func (uc *UserUsecase) SendOTP(email string) error {
+func (uc *UserUsecase) SendOTP(user *domain.User) error {
 	otp := uc.generateotp.GenerateRandomOTP()
 	entry := domain.UserUnverified{
-		Email:     email,
+		UserName: user.UserName ,
+		Email:     user.Email,
 		OTP:       otp,
+		Password: user.Password,
+		Role: user.Role,
 		ExpiresAt: time.Now().Add(5 * time.Minute),
 	}
 
-	if err := uc.generateotp.Send(email, otp); err != nil {
+	if err := uc.generateotp.Send(user.Email, otp); err != nil {
 		return err
 	}
 	return uc.userOTP.StoreOTP(entry)
@@ -74,6 +74,17 @@ func (uc *UserUsecase) VerifyOTP(email, otp string) (bool, error) {
 	}
 	if time.Now().After(entry.ExpiresAt) || entry.OTP != otp {
 		return false, nil
+	}
+	verifiedUser := &domain.User{
+	UserName:       entry.UserName,
+	Email:          entry.Email,
+	Password:       entry.Password,
+	Role:           entry.Role,
+}
+err = uc.userinterface.Create(verifiedUser)
+	
+	if err != nil {
+		return false,err
 	}
 	_ = uc.userOTP.DeleteOTP(email)
 	return true, nil

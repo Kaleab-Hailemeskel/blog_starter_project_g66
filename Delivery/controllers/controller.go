@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	conv "blog_starter_project_g66/Delivery/converter"
-	domain "blog_starter_project_g66/Domain"
-	usecases "blog_starter_project_g66/Usecases"
+	"blog_starter_project_g66/Delivery/converter"
+	"blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/Usecases"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -60,10 +60,10 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 	userone := conv.ChangeToDomainVerification(user)
 	valid, err := uc.UserUsecase.VerifyOTP(userone.Email, userone.OTP)
 	if err != nil {
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error": err.Error(),
-		"message": "Error while verifying OTP",
-	})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   err.Error(),
+			"message": "Error while verifying OTP",
+		})
 		return
 	}
 

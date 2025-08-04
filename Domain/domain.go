@@ -11,8 +11,11 @@ const (
 )
 
 type UserUnverified struct {
+	UserName string 
 	Email string
 	OTP string
+	Password string
+	Role string
 	ExpiresAt time.Time
 }
 

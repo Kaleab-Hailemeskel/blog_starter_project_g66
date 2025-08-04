@@ -1,7 +1,7 @@
 package conv
 
 import (
-	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/Domain"
 )
 
 func ChangeToDTOUserfunc(domainUser *domain.User) *domain.UserDTO {
@@ -93,8 +93,20 @@ func changeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
 }
 func ChangeToDomainVerification(udto *domain.UserUnverifiedDTO) *domain.UserUnverified{
     return &domain.UserUnverified{
+		UserName: udto.UserName,
         Email:     udto.Email,
         OTP:       udto.OTP,
+		Password: udto.Password,
+		Role: udto.Role,
         ExpiresAt: udto.ExpiresAt,
     }
+}
+
+func ChangeUnverfiedToVerified(u *domain.UserUnverifiedDTO) *domain.User{
+	return&domain.User{
+		UserName: u.UserName,
+		Email: u.Email,
+		Password: u.Password,
+		Role: u.Role,
+	}
 }
