@@ -5,6 +5,15 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+type AuthTokensDTO struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+type RefreshTokenDTO struct {
+	UserID    string    `json:"user_id" bson:"user_id"`
+	Token     string    `json:"token" bson:"token"`
+	ExpiresAt time.Time `bson:"expires_at"`
+}
 
 type UserUnverifiedDTO struct{
 	UserName string `json:"username" bson:"username"`

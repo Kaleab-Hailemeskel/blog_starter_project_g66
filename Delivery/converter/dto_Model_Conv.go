@@ -110,3 +110,16 @@ func ChangeUnverfiedToVerified(u *domain.UserUnverifiedDTO) *domain.User{
 		Role: u.Role,
 	}
 }
+func ChangeToDomainAuthTokens(dto *domain.AuthTokensDTO) *domain.AuthTokens {
+	return &domain.AuthTokens{
+		AccessToken:  dto.AccessToken,
+		RefreshToken: dto.RefreshToken,
+	}
+}
+func ChangeToDomainRefreshToken(dto *domain.RefreshTokenDTO) *domain.RefreshToken {
+	return &domain.RefreshToken{
+		UserID:    dto.UserID,
+		Token:     dto.Token,
+		ExpiresAt: dto.ExpiresAt,
+	}
+}

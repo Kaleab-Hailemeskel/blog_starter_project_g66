@@ -4,10 +4,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type IAuthService interface{
+	GenerateTokens(userID string) (string, string, error)
+	ValidateAccessToken(tokenStr string) (string, error)
+	ValidateRefreshToken(tokenStr string) (string, error)
+	ValidateToken(tokenStr string, secret []byte) (string, error)
+
+}
+type IAuthRepo interface{
+	Save(token *RefreshToken) error
+	GetByToken(token string) (*RefreshToken, error)
+	Delete(token string) error
+
+}
 
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	// FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	FindByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
 	// UpdatePassword(userEmail string, updatedPassword string) error
 	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	CheckUserExistance(userEmail string) bool
@@ -27,7 +40,6 @@ type IUserOTP interface {
 }
 type IEmailService interface {
     Send( email string, token string) error
-	// SendPasswordReset(to string, subject string, body string) error
 	GenerateRandomOTP() string 
 }
 type IBlogRepository interface {

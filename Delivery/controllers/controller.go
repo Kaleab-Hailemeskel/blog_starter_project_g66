@@ -75,3 +75,43 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "User verified successfully"})
 }
+
+func (uc *UserController)HandleLogin(ctx *gin.Context){
+
+	var user *domain.UserDTO
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "Invalid request payload",
+		})
+		return
+	}
+	if user.Email == "" || user.Password == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		return
+	}
+	jwtToken, err := uc.UserUsecase.Login(user.Email, user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, gin.H{"message": "User logged in successfully", "token": jwtToken})
+
+}
+func (h *UserController) HandleRefresh(c *gin.Context) {
+	var input *domain.RefreshTokenDTO
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Refresh token required"})
+		return
+	}
+
+	tokens, err := h.UserUsecase.Refresh(input.Token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tokens) // new AuthTokensDTO
+}

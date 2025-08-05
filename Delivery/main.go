@@ -29,11 +29,13 @@ func main() {
 	smtpServer := os.Getenv("SMTPSERVER")
 	smtpPort := os.Getenv("SMTPPORT")
 
+	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
+	authService := infrastructure.NewJWTService()
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort)
 	userRepo := repositories.NewUserRepository(mongoClient)
 	otpService := repositories.NewUserOTPRepository(mongoClient)
 	passwaordService := infrastructure.NewPasswordService()
-	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService)
+	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService,authService,authRepo)
 	userController := controllers.NewUserUsecase(userUsecase)
 
 	routers.Router(userController)
