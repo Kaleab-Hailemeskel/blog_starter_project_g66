@@ -4,11 +4,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
-	UpdatePassword(userEmail string, updatedPassword string) error
-	EditUserByEmail(userEmail string, updatedUserInfo *User) error
+	// FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	// UpdatePassword(userEmail string, updatedPassword string) error
+	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
+	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
+	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
 	CloseDataBase() error
 }
@@ -18,6 +21,17 @@ type IUserValidation interface {
 	IsStrongPassword(password string) bool
 	Hashpassword(password string) string
 	ComparePassword(userPassword, password string) error
+}
+type IUserOTP interface {
+	StoreOTP(entry UserUnverified) error
+	FindOTP(email string) (*UserUnverified, error)
+	DeleteOTP(email string) error
+}
+type IEmailService interface {
+    Send( email string, token string) error
+	// SendPasswordReset(to string, subject string, body string) error
+	GenerateRandomOTP() string 
+	
 }
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
@@ -36,4 +50,9 @@ type IBlogUseCase interface {
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
+}
+
+type IPasswordUsecase interface {
+	GenerateResetToken(email string) (string, error)
+	ResetPassword(token, newPassword string) error
 }
