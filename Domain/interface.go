@@ -7,7 +7,7 @@ import (
 
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	// FetchByEmail(userEmail string) (*UserDTO, error) //checks if user exisits or not
+	
 	// UpdatePassword(userEmail string, updatedPassword string) error
 	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
