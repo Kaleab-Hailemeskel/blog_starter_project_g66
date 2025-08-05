@@ -167,11 +167,12 @@ func (bldb *BlogDB) CloseDataBase() error {
 }
 
 // ! BLOG POUPULARITY STARTS HERE, DON'T FORGET TO CREATE IT'S OWN FILE TO MOVE IT THERE IF NECCESSARY
-type PopularityDB struct { 
+type PopularityDB struct {
 	Coll   mongo.Collection
 	Contxt context.Context
 	Client *mongo.Client
 }
+
 func NewBlogPopularityDataBaseService() domain.IPopularityRepository {
 	connection, err := Connect()
 
@@ -189,7 +190,7 @@ func NewBlogPopularityDataBaseService() domain.IPopularityRepository {
 
 }
 
-func (bldb *PopularityDB) CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) bool {
+func (bldb *PopularityDB) CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool {
 	filterUserInBlog := bson.M{
 		"blog_id": blogID,
 		"likes":   userID.Hex(),
@@ -200,7 +201,7 @@ func (bldb *PopularityDB) CheckUserLikeBlogID(blogID primitive.ObjectID, userID 
 	}
 	return true
 }
-func (bldb *PopularityDB) CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) bool {
+func (bldb *PopularityDB) CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool {
 	filterUserInBlog := bson.M{
 		"blog_id":  blogID,
 		"dislikes": userID.Hex(),
@@ -303,6 +304,167 @@ func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error 
 	}
 	return nil
 }
+
+func (bldb *PopularityDB) BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$likes",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+func (bldb *PopularityDB) BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$dislikes",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+func (bldb *PopularityDB) BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$comments",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+
 func (bldb *PopularityDB) CloseDataBase() error {
 	if bldb.Client == nil {
 		return nil // Nothing to close
