@@ -24,13 +24,16 @@ type IBlogRepository interface {
 	CloseDataBase() error
 }
 type IPopularityRepository interface {
-	CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) bool
-	CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) bool
+	CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
+	CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
 	UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error // revert boolean helps to undo the like while disliking the blog
 	UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error
 	CreateBlogPopularity(blogID primitive.ObjectID) error
 	CommentBlogByID(blogID primitive.ObjectID, commentDTO *CommentDTO) error
 	IncreaseBlogViewByID(blogID primitive.ObjectID) error
+	BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error)
 	CloseDataBase() error
 }
 
