@@ -20,7 +20,7 @@ func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserReposi
 	}
 }
 func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) error {
-	user, err := bluc.UserDataBase.FetchByEmail(ownerEmail)
+	user, err := bluc.UserDataBase.FindByEmail(ownerEmail)
 	if err != nil {
 		return err
 	}
