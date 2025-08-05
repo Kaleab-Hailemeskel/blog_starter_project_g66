@@ -49,7 +49,7 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 }
 
 func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) error {
-	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	userDTO, err := blue.UserDataBase.FindByEmail(userEmail)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) e
 	return blue.PopularityDataBase.UserLikeBlogByID(blogID, userDTO.UserID, false)
 }
 func (blue *BlogUseCase) DisLikeBlog(blogID primitive.ObjectID, userEmail string) error {
-	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	userDTO, err := blue.UserDataBase.FindByEmail(userEmail)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (blue *BlogUseCase) DisLikeBlog(blogID primitive.ObjectID, userEmail string
 	return blue.PopularityDataBase.UserDisLikeBlogByID(blogID, userDTO.UserID, false)
 }
 func (blue *BlogUseCase) CommentBlog(userEmail string, comment *domain.CommentDTO, blogID primitive.ObjectID) error {
-	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	userDTO, err := blue.UserDataBase.FindByEmail(userEmail)
 	if err != nil {
 		return err
 	}
