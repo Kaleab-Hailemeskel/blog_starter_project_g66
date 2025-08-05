@@ -43,7 +43,7 @@ func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "blog list not found"})
 		return
 	}
-	//? DataChange from []*BlogDTO to Blog
+	//? DataChange from []*BlogDTO to []*Blog
 	domainBlogList := []domain.Blog{}
 	for _, val := range resList {
 		domainBlogList = append(domainBlogList, *conv.ChangeToDomainBlog(val))
@@ -78,7 +78,12 @@ func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 }
 
 // ? From Popularity
-func (cntrl *BlogController) LikeBlog(ctx *gin.Context)     {}
+func (cntrl *BlogController) LikeBlog(ctx *gin.Context) {
+	//  get blog ID from param
+	//  change it to primitiveobj
+	//	get the user email
+	//	send the blogID to usecase.LikeBlog() , with the user email.
+}
 func (cntrl *BlogController) DisLikeBlog(ctx *gin.Context)  {}
 func (cntrl *BlogController) CommentBlog(ctx *gin.Context)  {}
 func (cntrl *BlogController) IncreaseView(ctx *gin.Context) {}
