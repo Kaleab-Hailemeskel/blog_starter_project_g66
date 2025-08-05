@@ -7,14 +7,16 @@ import (
 )
 
 type BlogUseCase struct {
-	BlogDataBase domain.IBlogRepository
-	UserDataBase domain.IUserRepository
+	BlogDataBase       domain.IBlogRepository
+	UserDataBase       domain.IUserRepository
+	PopularityDataBase domain.IPopularityRepository
 }
 
-func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository) *BlogUseCase {
+func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository, PopRepo domain.IPopularityRepository) *BlogUseCase {
 	return &BlogUseCase{
-		BlogDataBase: blogRepo,
-		UserDataBase: userRepo,
+		BlogDataBase:       blogRepo,
+		UserDataBase:       userRepo,
+		PopularityDataBase: PopRepo,
 	}
 }
 func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) error {
@@ -32,7 +34,6 @@ func (bluc *BlogUseCase) DeleteBlogByID(blogID string) error {
 	}
 	return bluc.BlogDataBase.DeleteBlogByID(blogObjID)
 }
-
 func (bluc *BlogUseCase) UpdateBlogByID(blogID string, updatedBlog *domain.Blog) error {
 	blogObjID, err := primitive.ObjectIDFromHex(blogID)
 	if err != nil {
@@ -45,4 +46,44 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 		pageNumber = 1
 	}
 	return bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber)
+}
+
+func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) error {
+	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	if err != nil {
+		return err
+	}
+	if blue.PopularityDataBase.CheckUserDisLikeBlogID(blogID, userDTO.UserID) {
+		err = blue.PopularityDataBase.UserDisLikeBlogByID(blogID, userDTO.UserID, true)
+		if err != nil {
+			return err
+		}
+	}
+	return blue.PopularityDataBase.UserLikeBlogByID(blogID, userDTO.UserID, false)
+}
+func (blue *BlogUseCase) DisLikeBlog(blogID primitive.ObjectID, userEmail string) error {
+	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	if err != nil {
+		return err
+	}
+	if blue.PopularityDataBase.CheckUserLikeBlogID(blogID, userDTO.UserID) {
+		err = blue.PopularityDataBase.UserLikeBlogByID(blogID, userDTO.UserID, true)
+		if err != nil {
+			return err
+		}
+	}
+	return blue.PopularityDataBase.UserDisLikeBlogByID(blogID, userDTO.UserID, false)
+}
+func (blue *BlogUseCase) CommentBlog(userEmail string, comment *domain.CommentDTO, blogID primitive.ObjectID) error {
+	userDTO, err := blue.UserDataBase.FetchByEmail(userEmail)
+	if err != nil {
+		return err
+	}
+	// setting name and ID on the comment so that the commentBlogByID will track it and update the comment
+	comment.UserID = userDTO.UserID
+	comment.UserName = userDTO.UserName
+	return blue.PopularityDataBase.CommentBlogByID(blogID, comment)
+}
+func (blue *BlogUseCase) IncreaseView(blogID primitive.ObjectID) error { // we don't have to care about who watch the blog, just add the view_count.
+	return blue.PopularityDataBase.IncreaseBlogViewByID(blogID)
 }
