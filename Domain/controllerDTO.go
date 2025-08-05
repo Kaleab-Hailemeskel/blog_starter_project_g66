@@ -7,9 +7,9 @@ import (
 )
 
 type UserUnverifiedDTO struct{
-	Email string `json: "email" bson: "email"`
-	OTP string		`json: "otp" bson:"otp"`
-	ExpiresAt time.Time	`json: "expires_at" bson:"expires_at"`
+	Email string `json:"email" bson:"email"`
+	OTP string		`json:"otp" bson:"otp"`
+	ExpiresAt time.Time	`json:"expires_at" bson:"expires_at"`
 
 }
 
