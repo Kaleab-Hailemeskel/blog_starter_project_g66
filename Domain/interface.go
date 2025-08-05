@@ -13,6 +13,8 @@ type IUserRepository interface { // eka was here
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
+	DemoteUser(userEmail string) error
+	PromoteUser(userEmail string) error
 	CloseDataBase() error
 }
 
@@ -43,10 +45,23 @@ type IBlogRepository interface {
 	CheckBlogExistance(blogID primitive.ObjectID) bool
 	CloseDataBase() error
 }
+type IPopularityRepository interface {
+	CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
+	CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
+	UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error // revert boolean helps to undo the like while disliking the blog
+	UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error
+	CreateBlogPopularity(blogID primitive.ObjectID) error
+	CommentBlogByID(blogID primitive.ObjectID, commentDTO *CommentDTO) error
+	IncreaseBlogViewByID(blogID primitive.ObjectID) error
+	BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error)
+	CloseDataBase() error
+}
 
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) error
-	DeleteBlogByID(blogID string) error // the controller will pass the a string from the url the usecase will change it to the objectID
+	CreateBlog(blog *Blog, userEmail string) error //! Instead of userEmail as string we can pass userID instantly
+	DeleteBlogByID(blogID string) error            // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)

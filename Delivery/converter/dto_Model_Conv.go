@@ -52,7 +52,7 @@ func ChangeToDomainPopularity(pdto *domain.PopularityDTO) *domain.Popularity {
 		ViewCount: pdto.ViewCount,
 		Likes:     pdto.Likes,
 		Dislikes:  pdto.Dislikes,
-		Comments:  changeToListDomainComment(pdto.Comments),
+		Comments:  ChangeToListDomainComment(pdto.Comments),
 	}
 }
 
@@ -61,7 +61,7 @@ func ChangeToDTOPopularity(pdto *domain.Popularity) *domain.PopularityDTO {
 		ViewCount: pdto.ViewCount,
 		Likes:     pdto.Likes,
 		Dislikes:  pdto.Dislikes,
-		Comments:  changeToListDTOComment(pdto.Comments),
+		Comments:  ChangeToListDTOComment(pdto.Comments),
 	}
 }
 func ChangeToDomainComment(cdto *domain.CommentDTO) *domain.Comment {
@@ -77,14 +77,14 @@ func ChangeToDTOComment(cdto *domain.Comment) *domain.CommentDTO {
 	}
 }
 
-func changeToListDomainComment(lctdo []*domain.CommentDTO) []*domain.Comment {
+func ChangeToListDomainComment(lctdo []*domain.CommentDTO) []*domain.Comment {
 	var listDomainComment []*domain.Comment
 	for _, val := range lctdo {
 		listDomainComment = append(listDomainComment, ChangeToDomainComment(val))
 	}
 	return listDomainComment
 }
-func changeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
+func ChangeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
 	var listDTOComment []*domain.CommentDTO
 	for _, val := range lctdo {
 		listDTOComment = append(listDTOComment, ChangeToDTOComment(val))
