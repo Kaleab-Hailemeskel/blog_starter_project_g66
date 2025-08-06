@@ -3,6 +3,7 @@ package usecases
 import (
 	domain "blog_starter_project_g66/Domain"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -77,4 +78,30 @@ func (uc *UserUsecase) VerifyOTP(email, otp string) (bool, error) {
 	}
 	_ = uc.userOTP.DeleteOTP(email)
 	return true, nil
+}
+
+func (uc *UserUsecase) PromoteUser(actor, target string) error{
+	actUser, err := uc.userinterface.FindByEmail(actor)
+
+	if err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	if actUser.Role != "SUPER_ADMIN"{
+		return fmt.Errorf("Unauthorized user")
+	}
+
+	return uc.userinterface.UpdateRole(target, "ADMIN")
+}
+
+func (uc *UserUsecase) DemoteUser(actor, target string) error{
+	actUser, err := uc.userinterface.FindByEmail(actor)
+	if err != nil {
+		return fmt.Errorf("User not found")
+	}
+	if actUser.Role != "SUPER_ADMIN"{
+		return fmt.Errorf("Unauthorized user")
+	}
+
+	return uc.userinterface.UpdateRole(target, "USER")
 }
