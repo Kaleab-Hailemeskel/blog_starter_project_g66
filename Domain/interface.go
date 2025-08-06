@@ -4,10 +4,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	
+
 	// UpdatePassword(userEmail string, updatedPassword string) error
 	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
@@ -30,10 +29,9 @@ type IUserOTP interface {
 	DeleteOTP(email string) error
 }
 type IEmailService interface {
-    Send( email string, token string) error
+	Send(email string, token string) error
 	// SendPasswordReset(to string, subject string, body string) error
-	GenerateRandomOTP() string 
-	
+	GenerateRandomOTP() string
 }
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
@@ -70,4 +68,13 @@ type IBlogUseCase interface {
 type IPasswordUsecase interface {
 	GenerateResetToken(email string) (string, error)
 	ResetPassword(token, newPassword string) error
+}
+
+type IAIInteraction interface {
+	IsClientConnected() bool
+	GenerateContent(prompt string) (*AIResponse, error)
+	ParseJsonBodyToDomain(aiResponse *AIResponse) any
+	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
+	IncrementInteractionCount()
+	CloseAIConnection() error
 }
