@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,7 +37,7 @@ func (r *UserOTPRepository) FindOTP(email string) (*domain.UserUnverified, error
 	return &entry, nil
 }
 
-func (r *UserOTPRepository)DeleteOTP(email string) error {
+func (r *UserOTPRepository) DeleteOTP(email string) error {
 	_, err := r.collection.DeleteOne(context.Background(), bson.M{"email": email})
 	return err
 }

@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/Domain"
 	"errors"
 	"fmt"
 	"time"
@@ -12,15 +12,20 @@ type UserUsecase struct {
 	userVaildate domain.IUserValidation
 	userOTP domain.IUserOTP 
 	generateotp domain.IEmailService
+	authService domain.IAuthService
+	authRepo domain.IAuthRepo
+
 
 }
 
-func NewUserUsecase(ui domain.IUserRepository,uv domain.IUserValidation, uo domain.IUserOTP, emailService domain.IEmailService) *UserUsecase{
+func NewUserUsecase(ui domain.IUserRepository,uv domain.IUserValidation, uo domain.IUserOTP, emailService domain.IEmailService,auth domain.IAuthService, authrepo domain.IAuthRepo) *UserUsecase{
 	return &UserUsecase{
 		userinterface: ui,
 		userVaildate: uv,
 		userOTP: uo,
 		generateotp: emailService,
+		authService: auth,
+		authRepo: authrepo,
 	}
 }
 
@@ -41,12 +46,9 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 	hashpassword := uc.userVaildate.Hashpassword(user.Password)
 	user.Password = hashpassword
 
-	err := uc.userinterface.Create(user)
-	if err != nil {
-		return err
-	}
+	
 
-	err = uc.SendOTP(user.Email)
+	err := uc.SendOTP(user)
 
 	if err != nil {
 		return errors.New("failed to send OTP: " + err.Error())
@@ -54,15 +56,18 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 
 	return nil
 }
-func (uc *UserUsecase) SendOTP(email string) error {
+func (uc *UserUsecase) SendOTP(user *domain.User) error {
 	otp := uc.generateotp.GenerateRandomOTP()
 	entry := domain.UserUnverified{
-		Email:     email,
+		UserName: user.UserName ,
+		Email:     user.Email,
 		OTP:       otp,
+		Password: user.Password,
+		Role: user.Role,
 		ExpiresAt: time.Now().Add(5 * time.Minute),
 	}
 
-	if err := uc.generateotp.Send(email, otp); err != nil {
+	if err := uc.generateotp.Send(user.Email, otp); err != nil {
 		return err
 	}
 	return uc.userOTP.StoreOTP(entry)
@@ -75,6 +80,17 @@ func (uc *UserUsecase) VerifyOTP(email, otp string) (bool, error) {
 	}
 	if time.Now().After(entry.ExpiresAt) || entry.OTP != otp {
 		return false, nil
+	}
+	verifiedUser := &domain.User{
+	UserName:       entry.UserName,
+	Email:          entry.Email,
+	Password:       entry.Password,
+	Role:           entry.Role,
+}
+err = uc.userinterface.Create(verifiedUser)
+	
+	if err != nil {
+		return false,err
 	}
 	_ = uc.userOTP.DeleteOTP(email)
 	return true, nil
@@ -104,4 +120,80 @@ func (uc *UserUsecase) DemoteUser(actor, target string) error{
 	}
 
 	return uc.userinterface.UpdateRole(target, "USER")
+}
+
+
+func (a *UserUsecase) Login(email, password string) (*domain.AuthTokens, error) {
+	user, err := a.userinterface.FindByEmail(email)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	err =a.userVaildate.ComparePassword(user.Password,password)
+	if err != nil {
+		return nil, errors.New("invalid password")
+	}
+
+	access, refresh, err := a.authService.GenerateTokens(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Save refresh token in DB
+	refreshEntry := &domain.RefreshToken{
+		UserID:    user.UserID.Hex(),
+		Token:     refresh,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+	}
+	err = a.authRepo.Save(refreshEntry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.AuthTokens{AccessToken: access, RefreshToken: refresh}, nil
+}
+func (a *UserUsecase) Refresh(oldRefreshToken string) (*domain.AuthTokens, error) {
+	// Validate token structure
+	userID, err := a.authService.ValidateRefreshToken(oldRefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if token is stored in DB
+	stored, err := a.authRepo.GetByToken(oldRefreshToken)
+	if err != nil || stored.UserID != userID  {
+		return nil, errors.New("refresh token not found or mismatched")
+	}
+
+	// Optional: delete old token (rotation)
+	_ = a.authRepo.Delete(oldRefreshToken)
+
+	user, err := a.userinterface.GetUserByID(userID)
+
+	if err != nil{
+		return nil,errors.New("user not found by id")
+	}
+
+	
+	// Generate new tokens
+	newAccess, newRefresh, err := a.authService.GenerateTokens(user)
+	if err != nil {
+		return nil, err
+	}
+
+	newEntry := &domain.RefreshToken{
+		UserID:    userID,
+		Token:     newRefresh,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+	}
+	err = a.authRepo.Save(newEntry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.AuthTokens{AccessToken: newAccess, RefreshToken: newRefresh}, nil
+}
+
+func (uc *UserUsecase) Logout(refreshToken string) error {
+	return uc.authRepo.Delete(refreshToken)
 }
