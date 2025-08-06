@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	dbName   = "blogbd_test"
-	collName = "blogCollection"
-	pageSize = 10
+	mainBlogDbName           = "blogbd_test"
+	mainBlogDbCollName       = "blogCollection"
+	blogPopularityDbName     = "blogPop_test"
+	blogPopularityDbCollName = "blogPop_collection"
+	pageSize                 = 10
 )
 
 type BlogDB struct {
@@ -30,10 +32,10 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 	connection, err := Connect()
 
 	if err != nil {
-		log.Fatal("can't initailize ", dbName, " Database")
+		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
 
-	collection := connection.Client.Database(dbName).Collection(collName)
+	collection := connection.Client.Database(mainBlogDbName).Collection(mainBlogDbCollName)
 
 	return &BlogDB{
 		Coll:   *collection,
@@ -74,7 +76,6 @@ func (bldb *BlogDB) DeleteBlogByID(blogID primitive.ObjectID) error {
 	}
 	return nil
 }
-
 func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domain.Blog) error {
 	// I don't want to check the existance of the blog before updating, b/c the updateOne will tell us if there weren't any changes mamde afterall
 	filter := bson.M{"_id": blogID}
@@ -99,7 +100,6 @@ func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domai
 	}
 	return nil
 }
-
 func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
 	skip := int64((pageNumber - 1) * pageSize)
 	limit := int64(pageSize)
@@ -146,7 +146,6 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	}
 	return blogs, nil
 }
-
 func (bldb *BlogDB) CheckBlogExistance(blogID primitive.ObjectID) bool {
 	filter := bson.M{"_id": blogID}
 	count, err := bldb.Coll.CountDocuments(bldb.Contxt, filter)
@@ -156,7 +155,6 @@ func (bldb *BlogDB) CheckBlogExistance(blogID primitive.ObjectID) bool {
 	}
 	return count > 0
 }
-
 func (bldb *BlogDB) CloseDataBase() error {
 	if bldb.Client == nil {
 		return nil // Nothing to close
@@ -164,6 +162,316 @@ func (bldb *BlogDB) CloseDataBase() error {
 	if err := bldb.Client.Disconnect(bldb.Contxt); err != nil {
 		return fmt.Errorf("error disconnecting from MongoDB: %w", err)
 	}
-	log.Println("Disconnected from MongoDB.")
+	log.Println("Disconnected from Blog MongoDB.")
+	return nil
+}
+
+// ! BLOG POUPULARITY STARTS HERE, DON'T FORGET TO CREATE IT'S OWN FILE TO MOVE IT THERE IF NECCESSARY
+type PopularityDB struct {
+	Coll   mongo.Collection
+	Contxt context.Context
+	Client *mongo.Client
+}
+
+func NewBlogPopularityDataBaseService() domain.IPopularityRepository {
+	connection, err := Connect()
+
+	if err != nil {
+		log.Fatal("can't initailize ", blogPopularityDbName, " Database")
+	}
+
+	collection := connection.Client.Database(blogPopularityDbName).Collection(blogPopularityDbCollName)
+
+	return &PopularityDB{
+		Coll:   *collection,
+		Contxt: context.TODO(),
+		Client: connection.Client,
+	}
+
+}
+
+func (bldb *PopularityDB) CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool {
+	filterUserInBlog := bson.M{
+		"blog_id": blogID,
+		"likes":   userID.Hex(),
+	}
+	count, err := bldb.Coll.CountDocuments(bldb.Contxt, filterUserInBlog)
+	if err != nil || count == 0 {
+		return false
+	}
+	return true
+}
+func (bldb *PopularityDB) CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool {
+	filterUserInBlog := bson.M{
+		"blog_id":  blogID,
+		"dislikes": userID.Hex(),
+	}
+	count, err := bldb.Coll.CountDocuments(bldb.Contxt, filterUserInBlog)
+	if err != nil || count == 0 {
+		return false
+	}
+	return true
+}
+func (bldb *PopularityDB) UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error {
+	// Filter to find the document
+	likeFilter := bson.M{"blog_id": blogID}
+
+	// Update statement using the $pull operator
+	update := bson.M{}
+
+	if revert {
+		update["$pull"] = bson.M{
+			"likes": userID.Hex(), // This tells MongoDB to remove the user from the likes array
+		}
+	} else {
+		update["$push"] = bson.M{
+			"likes": userID.Hex(), // This tells MongoDB to append the user.Hex() to the likes array
+		}
+	}
+	updateRes, err := bldb.Coll.UpdateOne(bldb.Contxt, likeFilter, update)
+	if err != nil {
+		return err
+	} else if updateRes.ModifiedCount == 0 {
+		return fmt.Errorf("no blog found with ID %s to update OR no like were made %t", blogID, revert)
+	}
+	return nil
+}
+func (bldb *PopularityDB) UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error {
+	// Filter to find the document
+	dislikeFilter := bson.M{"blog_id": blogID}
+
+	// Update statement using the $pull operator
+	update := bson.M{}
+
+	if revert {
+		update["$pull"] = bson.M{
+			"dislikes": userID.Hex(), // This tells MongoDB to remove the user from the dislikes array
+		}
+	} else {
+		update["$push"] = bson.M{
+			"dislikes": userID.Hex(), // This tells MongoDB to append the user.Hex() to the dislikes array
+		}
+	}
+	updateRes, err := bldb.Coll.UpdateOne(bldb.Contxt, dislikeFilter, update)
+	if err != nil {
+		return err
+	} else if updateRes.ModifiedCount == 0 {
+		return fmt.Errorf("no blog found with ID %s to update OR no dislike were made %t", blogID, revert)
+	}
+	return nil
+}
+func (bldb *PopularityDB) CommentBlogByID(blogID primitive.ObjectID, commentDTO *domain.CommentDTO) error {
+	commentFilter := bson.M{
+		"blog_id":      blogID,
+		"comments._id": commentDTO.UserID,
+	}
+	updatedComment := bson.M{
+		"$set": bson.M{
+			"comments.$._id":       commentDTO.UserID,
+			"comments.$.user_name": commentDTO.UserName,
+			"comments.$.comment":   commentDTO.Comment,
+		},
+	}
+	//? if the comment was found in that blog it will update it other wise it will create a new comment
+	opts := options.Update().SetUpsert(true)
+	result, err := bldb.Coll.UpdateOne(bldb.Contxt, commentFilter, updatedComment, opts)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return fmt.Errorf("no blog found with ID %s to update OR no comment were made", blogID)
+	}
+	return nil
+}
+func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) error {
+	_, err := bldb.Coll.InsertOne(bldb.Contxt, domain.PopularityDTO{BlogID: blogID})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error {
+	filter := bson.M{"blog_id": blogID}
+
+	increaseByOne := bson.M{
+		"$inc": bson.M{"view_count": 1},
+	}
+	updateres, err := bldb.Coll.UpdateOne(bldb.Contxt, filter, increaseByOne)
+	if err != nil {
+		return err
+	} else if updateres.ModifiedCount == 0 {
+		return fmt.Errorf("no blog found with ID %s to update OR no view increase were made", blogID)
+	}
+	return nil
+}
+
+func (bldb *PopularityDB) BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$likes",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+func (bldb *PopularityDB) BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$dislikes",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+func (bldb *PopularityDB) BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error) {
+	// Define the aggregation pipeline to match the document and count the 'likes' array.
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "blog_id",
+						Value: blogID,
+					},
+				},
+			},
+		},
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "count",
+						Value: bson.D{
+							{
+								Key:   "$size",
+								Value: "$comments",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Execute the aggregation
+	cursor, err := bldb.Coll.Aggregate(bldb.Contxt, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(bldb.Contxt)
+	type CountResult struct {
+		Count int `bson:"count"`
+	}
+	// Unmarshal the result
+	var results []CountResult
+	if err = cursor.All(bldb.Contxt, &results); err != nil {
+		return 0, err
+	}
+
+	// Return the count, handling the case where no document was found
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+
+func (bldb *PopularityDB) CloseDataBase() error {
+	if bldb.Client == nil {
+		return nil // Nothing to close
+	}
+	if err := bldb.Client.Disconnect(bldb.Contxt); err != nil {
+		return fmt.Errorf("error disconnecting from MongoDB: %w", err)
+	}
+	log.Println("Disconnected from Popularity MongoDB.")
 	return nil
 }

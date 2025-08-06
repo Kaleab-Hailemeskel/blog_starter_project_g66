@@ -4,21 +4,24 @@ import (
 	"fmt"
 	"math/rand"
 	"net/smtp"
+	
 )
 
 type EmailService struct {
 	From        string
 	AppPass     string
 	SmtpService string
-	SmtPort     string
+	SmtPort string
+	Username string
 }
 
-func NewOTP_service(from, app, smtpsev, smtport string) *EmailService {
+func NewOTP_service(from ,app, smtpsev , smtport, username string) *EmailService{
 	return &EmailService{
 		From:        from,
 		AppPass:     app,
 		SmtpService: smtpsev,
-		SmtPort:     smtport,
+		SmtPort: smtport,
+		Username: username,
 	}
 }
 

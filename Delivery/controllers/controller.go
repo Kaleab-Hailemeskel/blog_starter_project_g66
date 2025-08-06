@@ -13,6 +13,10 @@ type UserController struct {
 	UserUsecase *usecases.UserUsecase
 }
 
+type PromoteDemoteRequest struct {
+	TargetEmail string `json:"target_email" binding:"required,email"`
+}
+
 func NewUserUsecase(uuc *usecases.UserUsecase) *UserController {
 	return &UserController{
 		UserUsecase: uuc,
@@ -131,4 +135,48 @@ func (h *UserController) HandleLogout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+}
+
+func (uc *UserController) PromoteUser(ctx *gin.Context) {
+	var req PromoteDemoteRequest
+	 if err := ctx.ShouldBindJSON(&req); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    actingEmail, exists := ctx.Get("user_email")
+    if !exists {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+        return
+    }
+
+    err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
+    if err != nil {
+        ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+        return
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "User promoted to ADMIN successfully"})
+}
+
+func (uc *UserController) DemoteUser(ctx *gin.Context) {
+	var req PromoteDemoteRequest
+	 if err := ctx.ShouldBindJSON(&req); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    actingEmail, exists := ctx.Get("user_email")
+    if !exists {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+        return
+    }
+
+    err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
+    if err != nil {
+        ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+        return
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
 }
