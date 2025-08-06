@@ -51,7 +51,7 @@ type Comment struct {
 type Filter struct {
 	Popularity_value int
 	Tag              string
-	AfterDate        time.Time
+	AfterDate        *time.Time
 	AuthorName       string
 	Title            string
 }
