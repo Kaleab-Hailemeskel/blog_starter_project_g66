@@ -28,9 +28,10 @@ func main() {
 	appPass := os.Getenv("APPPASS")
 	smtpServer := os.Getenv("SMTPSERVER")
 	smtpPort := os.Getenv("SMTPPORT")
-
+	
 	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
-	authService := infrastructure.NewJWTService()
+	// authMeddleware := infrastructure.NewAuthMiddleware(authRepo)
+	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort)
 	userRepo := repositories.NewUserRepository(mongoClient)
 	otpService := repositories.NewUserOTPRepository(mongoClient)

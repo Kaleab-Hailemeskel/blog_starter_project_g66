@@ -1,14 +1,15 @@
 package domain
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IAuthService interface{
-	GenerateTokens(userID string) (string, string, error)
-	ValidateAccessToken(tokenStr string) (string, error)
+	GenerateTokens(user *UserDTO) (string, string, error)
+	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
 	ValidateRefreshToken(tokenStr string) (string, error)
-	ValidateToken(tokenStr string, secret []byte) (string, error)
+	ValidateToken(tokenStr string) (jwt.MapClaims, error)
 
 }
 type IAuthRepo interface{
@@ -24,7 +25,9 @@ type IUserRepository interface { // eka was here
 	// UpdatePassword(userEmail string, updatedPassword string) error
 	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	CheckUserExistance(userEmail string) bool
+	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
+
 }
 
 type IUserValidation interface {

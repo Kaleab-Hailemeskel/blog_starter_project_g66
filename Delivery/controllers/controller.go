@@ -109,9 +109,26 @@ func (h *UserController) HandleRefresh(c *gin.Context) {
 
 	tokens, err := h.UserUsecase.Refresh(input.Token)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, tokens) // new AuthTokensDTO
+}
+
+func (h *UserController) HandleLogout(c *gin.Context) {
+	var input *domain.RefreshTokenDTO
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "refresh_token is required"})
+		return
+	}
+
+	err := h.UserUsecase.Logout(input.Token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to log out"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }

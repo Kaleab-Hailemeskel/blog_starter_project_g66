@@ -107,7 +107,7 @@ func (a *UserUsecase) Login(email, password string) (*domain.AuthTokens, error) 
 		return nil, errors.New("invalid password")
 	}
 
-	access, refresh, err := a.authService.GenerateTokens(user.UserID.Hex())
+	access, refresh, err := a.authService.GenerateTokens(user)
 	if err != nil {
 		return nil, err
 	}
@@ -134,15 +134,22 @@ func (a *UserUsecase) Refresh(oldRefreshToken string) (*domain.AuthTokens, error
 
 	// Check if token is stored in DB
 	stored, err := a.authRepo.GetByToken(oldRefreshToken)
-	if err != nil || stored.UserID != userID {
+	if err != nil || stored.UserID != userID  {
 		return nil, errors.New("refresh token not found or mismatched")
 	}
 
 	// Optional: delete old token (rotation)
 	_ = a.authRepo.Delete(oldRefreshToken)
 
+	user, err := a.userinterface.GetUserByID(userID)
+
+	if err != nil{
+		return nil,errors.New("user not found by id")
+	}
+
+	
 	// Generate new tokens
-	newAccess, newRefresh, err := a.authService.GenerateTokens(userID)
+	newAccess, newRefresh, err := a.authService.GenerateTokens(user)
 	if err != nil {
 		return nil, err
 	}
@@ -158,4 +165,8 @@ func (a *UserUsecase) Refresh(oldRefreshToken string) (*domain.AuthTokens, error
 	}
 
 	return &domain.AuthTokens{AccessToken: newAccess, RefreshToken: newRefresh}, nil
+}
+
+func (uc *UserUsecase) Logout(refreshToken string) error {
+	return uc.authRepo.Delete(refreshToken)
 }

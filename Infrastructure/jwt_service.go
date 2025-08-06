@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"blog_starter_project_g66/Domain"
 	"errors"
 	"time"
 
@@ -8,30 +9,38 @@ import (
 	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type JWTService struct{
+type JWTService struct {
+	authRepo domain.IAuthRepo
+}
 
+func NewJWTService(auth domain.IAuthRepo) *JWTService {
+	return &JWTService{
+		authRepo:auth ,
+	}
 }
-func NewJWTService()*JWTService{
-	return &JWTService{}
-}
+
 var jwtSecret = []byte("access-secret")
 var refreshSecret = []byte("refresh-secret")
 
-func (j *JWTService)GenerateTokens(userID string) (string, string, error) {
+func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error) {
 	// Access Token
-	atClaims := jwt.MapClaims{}
-	atClaims["user_id"] = userID
-	atClaims["exp"] = time.Now().Add(15 * time.Minute).Unix()
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	claims := jwt.MapClaims{
+		"user_id": user.UserID,
+		"role": user.Role,
+		"exp": time.Now().Add(15 * time.Minute).Unix(),
+	}
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	atString, err := accessToken.SignedString(jwtSecret)
 	if err != nil {
 		return "", "", err
 	}
 
 	// Refresh Token
-	rtClaims := jwt.MapClaims{}
-	rtClaims["user_id"] = userID
-	rtClaims["exp"] = time.Now().Add(7 * 24 * time.Hour).Unix()
+	rtClaims :=jwt.MapClaims{
+		"user_id": user.UserID,
+		"role": user.Role,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	rtString, err := refreshToken.SignedString(refreshSecret)
 	if err != nil {
@@ -41,27 +50,58 @@ func (j *JWTService)GenerateTokens(userID string) (string, string, error) {
 	return atString, rtString, nil
 }
 
-func (j *JWTService) ValidateAccessToken(tokenStr string) (string, error) {
-	return j.ValidateToken(tokenStr, jwtSecret)
-}
 
 func (j *JWTService) ValidateRefreshToken(tokenStr string) (string, error) {
-	return j.ValidateToken(tokenStr, refreshSecret)
-}
-
-func (j *JWTService) ValidateToken(tokenStr string, secret []byte) (string, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
+	 token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return refreshSecret, nil
 	})
 
 	if err != nil || !token.Valid {
-		return "", errors.New("invalid token")
+		return "", errors.New("invalid or malformed token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("invalid token claims")
+	}
+
+	// Manually check expiration
+	expFloat, ok := claims["exp"].(float64)
+	if !ok {
+		return "", errors.New("invalid exp claim")
+	}
+	if int64(expFloat) < time.Now().Unix() {
+		_ = j.authRepo.Delete(tokenStr)
+		return "", errors.New("refresh token expired")
+	}
+
+	// Extract user_id safely
+	userIDRaw, ok := claims["user_id"]
+	if !ok {
+		return "", errors.New("user_id not found in token")
+	}
+
+	userID, ok := userIDRaw.(string)
+	if !ok {
+		return "", errors.New("user_id is not a string")
+	}
+
+	return userID, nil
+}
+
+func (j *JWTService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims["user_id"] == nil {
-		return "", errors.New("invalid claims")
+		return nil, errors.New("invalid claims")
 	}
 
-	return claims["user_id"].(string), nil
+	return token.Claims.(jwt.MapClaims), nil
 }

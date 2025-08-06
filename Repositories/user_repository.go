@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -42,6 +43,22 @@ func (r *UserRepository) FindByEmail(email string) (*domain.UserDTO, error) {
 	}
 	return &user, nil
 
+}
+
+func (r *UserRepository) GetUserByID(userID string) (*domain.UserDTO, error){
+	var user domain.UserDTO
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, errors.New("invalid user ID format")
+	}
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+	return &user, nil
 }
 
 func (r *UserRepository) CloseDataBase() error {
