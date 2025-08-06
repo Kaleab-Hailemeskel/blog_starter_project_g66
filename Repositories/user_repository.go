@@ -5,8 +5,7 @@ import (
 	"context"
 	"errors"
 	"time"
-	"errors"
-	"time"
+
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -66,18 +65,6 @@ func (r *UserRepository) GetUserByID(userID string) (*domain.UserDTO, error){
 
 func (r *UserRepository) CloseDataBase() error {
 	return r.collection.Database().Client().Disconnect(context.TODO())
-}
-
-func (r *UserRepository) FindByEmail(email string) (*domain.UserDTO, error) {
-	var user domain.UserDTO
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-	return &user, nil
-
 }
 
 func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
