@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -98,13 +97,13 @@ func (aint *AI_Interaction) GenerateContent(prompt string) (*domain.AIResponse, 
 	if err != nil {
 		return nil, err
 	}
-	log.Println("response from AI generated successfully ✅")
+
 	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
 		respText := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
-		log.Println("✅", respText)
+
 		var aiResponse domain.AIResponse
 		if err := json.Unmarshal([]byte(respText), &aiResponse); err != nil {
-			log.Println("❌ response unmarshalling failed")
+
 			return nil, err
 		}
 		return &aiResponse, nil
@@ -126,19 +125,17 @@ func (commInt *AICommentInteraction) CallAIAndGetResponse(developerMessage strin
 	}
 	Here is the paragraph:
 ` + userMessage
-	log.Println("passed to generate content" + overAllPrompt + "\n")
+
 	return commInt.GenerateContent(overAllPrompt)
 }
 
 func (blgInt *AIBlogInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
 	var generatedBlog domain.Blog
-	log.Println("⚠️  Blog Unmarshaling")
 
 	if err := json.Unmarshal(aiResponse.MainResponse, &generatedBlog); err != nil {
-		log.Println("❌ > Blog Unmarshaling")
+
 		return nil
 	}
-	log.Println("✅ works")
 
 	return &generatedBlog
 }
@@ -163,7 +160,6 @@ func (blgInt *AIBlogInteraction) CallAIAndGetResponse(developerMessage string, u
 func (blgFilter *AIBlogFilterInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
 	var generatedFilter domain.AIBlogFilter
 	if err := json.Unmarshal(aiResponse.MainResponse, &generatedFilter); err != nil {
-		log.Println("❌ > Blog Filtering")
 
 		return nil
 	}
