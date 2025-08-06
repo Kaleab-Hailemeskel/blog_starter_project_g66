@@ -30,15 +30,19 @@ func main() {
 	smtpPort := os.Getenv("SMTPPORT")
 	user := os.Getenv("SMTP_USER")
 	jwtSecret := os.Getenv("JWT_SECRET")
-
+	
+	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
+	// authMeddleware := infrastructure.NewAuthMiddleware(authRepo)
+	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
 	userRepo := repositories.NewUserRepository(mongoClient)
 	otpService := repositories.NewUserOTPRepository(mongoClient)
 	passwaordService := infrastructure.NewPasswordService()
-	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService)
+	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService,authService,authRepo)
 	userController := controllers.NewUserUsecase(userUsecase)
+	userRepo.CreateSuperAdmin()
 
 	passwordUsecase := usecases.NewPasswordUsecase(userRepo, jwtSecret)
 	passwordController := controllers.NewPasswordController(passwordUsecase)
-	routers.Router(userController, passwordController)
+	routers.Router(userController, passwordController, userController)
 }

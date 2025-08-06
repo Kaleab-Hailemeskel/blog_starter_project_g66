@@ -1,8 +1,23 @@
 package domain
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type IAuthService interface{
+	GenerateTokens(user *UserDTO) (string, string, error)
+	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
+	ValidateRefreshToken(tokenStr string) (string, error)
+	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+
+}
+type IAuthRepo interface{
+	Save(token *RefreshToken) error
+	GetByToken(token string) (*RefreshToken, error)
+	Delete(token string) error
+
+}
 
 type IUserRepository interface { // eka was here
 	Create(user *User) error
@@ -12,9 +27,13 @@ type IUserRepository interface { // eka was here
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
-	DemoteUser(userEmail string) error
-	PromoteUser(userEmail string) error
+	CreateSuperAdmin() error
+	UpdateRole(email, role string) error
+	// DemoteUser(userEmail string) error
+	// PromoteUser(userEmail string) error
+	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
+
 }
 
 type IUserValidation interface {
@@ -29,9 +48,9 @@ type IUserOTP interface {
 	DeleteOTP(email string) error
 }
 type IEmailService interface {
-	Send(email string, token string) error
-	// SendPasswordReset(to string, subject string, body string) error
-	GenerateRandomOTP() string
+    Send( email string, token string) error
+	GenerateRandomOTP() string 
+	
 }
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
