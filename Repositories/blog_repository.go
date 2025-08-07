@@ -58,9 +58,9 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) err
 	}
 	return nil
 }
-func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.Blog, error) {
+func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
 	filter := bson.M{"_id": blogID}
-	var blog domain.Blog
+	var blog domain.BlogDTO
 	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&blog)
 	if err != nil {
 		return nil, err
