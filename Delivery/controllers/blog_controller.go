@@ -23,6 +23,24 @@ func NewController(blogUseCase domain.IBlogUseCase) *BlogController {
 	}
 }
 
+func (cntrl *BlogController) CreateBlog(ctx *gin.Context) {
+	var blogDTO domain.BlogDTO
+
+	if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error":"Invalid blog data"})
+		return 
+	}
+	ownerEmail := ctx.GetString("user_email")
+	blog := conv.ChangeToDomainBlog(&blogDTO)
+
+	createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.IndentedJSON(http.StatusCreated, gin.H{"message":"blog created", "blog":createdBlog})
+}
+
 // filter blog can also be used to get all blogs.
 func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 	mapQuery := map[string]string{}
@@ -66,7 +84,7 @@ func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
 func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 	blogStringID := ctx.Param("id")
 	var blogDTO domain.BlogDTO
-	if err := ctx.ShouldBindBodyWithJSON(blogDTO); err != nil {
+	if err := ctx.ShouldBindJSON(blogDTO); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid Blog type"})
 		return
 	}

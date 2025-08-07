@@ -19,13 +19,17 @@ func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserReposi
 		PopularityDataBase: PopRepo,
 	}
 }
-func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) error {
+func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) (*domain.Blog, error) {
 	user, err := bluc.UserDataBase.FindByEmail(ownerEmail)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	userID := user.UserID
-	return bluc.BlogDataBase.CreateBlog(blog, userID)
+	createdBlog, err := bluc.BlogDataBase.CreateBlog(blog, userID)
+	if err != nil {
+		return nil, err
+	}
+	return createdBlog, nil
 }
 func (bluc *BlogUseCase) DeleteBlogByID(blogID string) error {
 	blogObjID, err := primitive.ObjectIDFromHex(blogID)
