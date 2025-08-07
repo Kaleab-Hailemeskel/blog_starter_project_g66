@@ -41,5 +41,13 @@ func main() {
 
 	passwordUsecase := usecases.NewPasswordUsecase(userRepo, jwtSecret)
 	passwordController := controllers.NewPasswordController(passwordUsecase)
-	routers.Router(userController, passwordController, userController)
+	
+
+	blogRepo := repositories.NewBlogDataBaseService()
+	popularityRepo := repositories.NewBlogPopularityDataBaseService()
+	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
+	blogController := controllers.NewController(blogUsecase)
+
+	routers.Router(userController, passwordController, blogController)
+
 }

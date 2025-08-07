@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Router(uc *controllers.UserController, pc *controllers.PasswordController, ctl *controllers.UserController) {
+func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController) {
 	router := gin.Default()
 
 	router.POST("/login",)
@@ -14,15 +14,19 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	router.POST("/registration/verification",uc.RegistrationValidation )
 	router.POST("/forgot_password",pc.ForgotPassword)
 	router.PUT("/reset_password", pc.ResetPassword)
-	router.POST("/promote_user", ctl.PromoteUser)
-	router.POST("/demote_user", ctl.DemoteUser)
+	router.POST("/promote_user", uc.PromoteUser)
+	router.POST("/demote_user", uc.DemoteUser)
 	router.POST("/logout",)
 	router.PUT("/editprofile")
-	router.POST("/blog",)
-	router.GET("/blog",)
-	router.GET("/blog/filter",)
-	// router.PUT("/blog/:id",)
-	// router.DELETE("/blog/:id",)
+	blogRoutes := router.Group("/blog")
+	{
+		blogRoutes.POST("", bc.CreateBlog)     
+		blogRoutes.GET("", bc.FilterBlog)         
+		blogRoutes.GET("/filter", bc.FilterBlog)   
+		blogRoutes.PUT("/:id", bc.UpdateBlog)      
+		blogRoutes.DELETE("/:id", bc.DeleteBlog)   
+	}
+
 	// router.POST("/blog/sreach",)
 	// router.POST("/ai",)
 	// router.POST("/ai/:id",)
