@@ -45,7 +45,17 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
-	return bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber)
+	if res, err := bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber); err != nil {
+		return nil, err
+	} else {
+
+		func() { // Go routine might be implemented here
+			for _, val := range res {
+				bluc.IncreaseView(val.BlogID)
+			}
+		}()
+		return res, nil
+	}
 }
 
 func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) error {
