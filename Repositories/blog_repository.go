@@ -50,8 +50,9 @@ func (bldb *BlogDB) IsClientConnected() bool {
 	return bldb.Client != nil && bldb.Coll != nil
 }
 func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) error {
-
-	blog.LastUpdate = time.Now()
+	// 
+	blog.LastUpdate = time.Now() 
+	log.Println("➡️➡️ ", blog.LastUpdate, "Now: ", time.Now())
 	log.Println("... Changing to BlogDTO")
 	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO this part is needed since the plain Blog doesn't has the json specifications
 	blogDTO.OwnerID = userID
@@ -124,7 +125,7 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 			filter["title"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Title, Options: "i"}}
 		}
 		if url_filter.AfterDate != nil && !url_filter.AfterDate.IsZero() {
-			filter["last_update"] = bson.M{"$gte": *url_filter.AfterDate}
+			filter["last_update_time"] = bson.M{"$gte": *url_filter.AfterDate}
 			log.Println("\t➡️ passing", *url_filter.AfterDate)
 
 		}else{
