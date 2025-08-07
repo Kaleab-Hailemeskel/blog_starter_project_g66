@@ -49,6 +49,7 @@ type IEmailService interface {
 	GenerateRandomOTP() string
 }
 type IBlogRepository interface {
+	IsClientConnected() bool
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
 	FindBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
