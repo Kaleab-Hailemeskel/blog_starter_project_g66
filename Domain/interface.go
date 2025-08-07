@@ -49,7 +49,7 @@ type IEmailService interface {
 	GenerateRandomOTP() string
 }
 type IBlogRepository interface {
-	CreateBlog(blog *Blog, userID primitive.ObjectID) error
+	CreateBlog(blog *Blog, userID primitive.ObjectID) (*Blog,error)
 	FindBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
 	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
