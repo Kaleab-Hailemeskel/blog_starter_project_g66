@@ -5,6 +5,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 type AuthTokensDTO struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -15,14 +16,13 @@ type RefreshTokenDTO struct {
 	ExpiresAt time.Time `bson:"expires_at"`
 }
 
-type UserUnverifiedDTO struct{
-	UserName string `json:"username" bson:"username"`
-	Email string `json:"email" bson:"email"`
-	OTP string		`json:"otp" bson:"otp"`
-	Password string `json:"password" bson:"password"`
-	Role string `json:"role" bson:"role"`
-	ExpiresAt time.Time	`json:"expires_at" bson:"expires_at"`
-
+type UserUnverifiedDTO struct {
+	UserName  string    `json:"username" bson:"username"`
+	Email     string    `json:"email" bson:"email"`
+	OTP       string    `json:"otp" bson:"otp"`
+	Password  string    `json:"password" bson:"password"`
+	Role      string    `json:"role" bson:"role"`
+	ExpiresAt time.Time `json:"expires_at" bson:"expires_at"`
 }
 
 type UserDTO struct {
@@ -46,12 +46,13 @@ type BlogDTO struct {
 	LastUpdate  time.Time          `json:"last_update_time" bson:"last_update_time"`
 }
 type PopularityDTO struct {
-	PopularityID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	BlogID       primitive.ObjectID `json:"blog_id" bson:"blog_id"`
-	ViewCount    int                `json:"view_count" bson:"view_count"`
-	Likes        []string           `json:"likes" bson:"likes"`       // list of user_ids — deduplicate before insert
-	Dislikes     []string           `json:"dislikes" bson:"dislikes"` // list of user_ids — same
-	Comments     []*CommentDTO      `json:"comments" bson:"comments"` // comment IDs or plain content
+	PopularityID    primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	BlogID          primitive.ObjectID `json:"blog_id" bson:"blog_id"`
+	PopularityValue int                `json:"popularity_value" bson:"popularity_value"`
+	ViewCount       int                `json:"view_count" bson:"view_count"`
+	Likes           []string           `json:"likes" bson:"likes"`       // list of user_ids — deduplicate before insert
+	Dislikes        []string           `json:"dislikes" bson:"dislikes"` // list of user_ids — same
+	Comments        []*CommentDTO      `json:"comments" bson:"comments"` // comment IDs or plain content
 }
 
 type CommentDTO struct {
@@ -59,4 +60,3 @@ type CommentDTO struct {
 	UserName string             `json:"user_name" bson:"user_name"`
 	Comment  string             `json:"comment" bson:"comment"`
 }
-

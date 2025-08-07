@@ -20,6 +20,8 @@ const (
 	blogPopularityDbName     = "blogPop_test"
 	blogPopularityDbCollName = "blogPop_collection"
 	pageSize                 = 10
+	ASC                      = 1
+	DESC                     = -1
 )
 
 type BlogDB struct {
@@ -57,9 +59,9 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*d
 
 	return blog, nil
 }
-func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.Blog, error) {
+func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
 	filter := bson.M{"_id": blogID}
-	var blog domain.Blog
+	var blog domain.BlogDTO
 	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&blog)
 	if err != nil {
 		return nil, err
@@ -463,6 +465,46 @@ func (bldb *PopularityDB) BlogPostCommentCountByID(blogID primitive.ObjectID) (i
 		return 0, nil
 	}
 	return results[0].Count, nil
+}
+func (bldb *PopularityDB) GetPopularityBlogByID(blogID primitive.ObjectID) (*domain.PopularityDTO, error) {
+	filter := bson.M{"blog_id": blogID}
+	var popBlog domain.PopularityDTO
+	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&popBlog)
+	if err != nil {
+		return nil, err
+	}
+	return &popBlog, nil
+}
+func (bldb *PopularityDB) GetPopularityByFilter(order int, pageNumber int) ([]*domain.PopularityDTO, error) {
+	skip := int64((pageNumber - 1) * pageSize)
+	limit := int64(pageSize)
+	if !(order == ASC || order == DESC) {
+		order = DESC
+	}
+	filter := bson.M{}
+	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "popularity_value", Value: order}})
+
+	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("error getting filtered Popularity: %w", err)
+	}
+	defer cursor.Close(bldb.Contxt)
+
+	var blogs []*domain.PopularityDTO
+	for cursor.Next(bldb.Contxt) {
+		var blogDTO domain.PopularityDTO // Change target type to DTO for decoding
+
+		if err := cursor.Decode(&blogDTO); err != nil {
+			return nil, fmt.Errorf("error decoding filtered Popularity DTO: %w", err)
+		}
+
+		blogs = append(blogs, &blogDTO)
+	}
+
+	if err = cursor.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating through filtered Popularity cursor: %w", err)
+	}
+	return blogs, nil
 }
 
 func (bldb *PopularityDB) CloseDataBase() error {
