@@ -11,20 +11,20 @@ const (
 )
 
 type AuthTokens struct {
-	AccessToken  string 
-	RefreshToken string 
+	AccessToken  string
+	RefreshToken string
 }
 type RefreshToken struct {
-	UserID    string   
-	Token     string    
-	ExpiresAt time.Time 
+	UserID    string
+	Token     string
+	ExpiresAt time.Time
 }
 type UserUnverified struct {
-	UserName string 
-	Email string
-	OTP string
-	Password string
-	Role string
+	UserName  string
+	Email     string
+	OTP       string
+	Password  string
+	Role      string
 	ExpiresAt time.Time
 }
 
@@ -48,10 +48,11 @@ type Blog struct {
 }
 
 type Popularity struct {
-	ViewCount int
-	Likes     []string
-	Dislikes  []string
-	Comments  []*Comment
+	PopularityValue int //? Lately added for the sake of calculating the popularity
+	ViewCount       int
+	Likes           []string
+	Dislikes        []string
+	Comments        []*Comment
 }
 
 type Comment struct {
