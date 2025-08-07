@@ -49,9 +49,9 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 func (bldb *BlogDB) IsClientConnected() bool {
 	return bldb.Client != nil && bldb.Coll != nil
 }
-func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) error {
-	// 
-	blog.LastUpdate = time.Now() 
+func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*domain.Blog, error) {
+	//
+	blog.LastUpdate = time.Now()
 	log.Println("➡️➡️ ", blog.LastUpdate, "Now: ", time.Now())
 	log.Println("... Changing to BlogDTO")
 	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO this part is needed since the plain Blog doesn't has the json specifications
@@ -62,7 +62,7 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) err
 		return nil, fmt.Errorf("error creating blog: %w", err)
 	}
 	log.Println("\t✅ Blog Created")
-	return nil
+	return blog, nil
 }
 func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
 	filter := bson.M{"_id": blogID}
