@@ -12,7 +12,7 @@ type BlogUseCase struct {
 	PopularityDataBase domain.IPopularityRepository
 }
 
-func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository, PopRepo domain.IPopularityRepository) *BlogUseCase {
+func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository, PopRepo domain.IPopularityRepository) domain.IBlogUseCase {
 	return &BlogUseCase{
 		BlogDataBase:       blogRepo,
 		UserDataBase:       userRepo,
@@ -57,7 +57,9 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 		return res, nil
 	}
 }
-
+func (bluc *BlogUseCase) GetBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
+	return bluc.BlogDataBase.FindBlogByID(blogID)
+}
 func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) error {
 	userDTO, err := blue.UserDataBase.FindByEmail(userEmail)
 	if err != nil {
