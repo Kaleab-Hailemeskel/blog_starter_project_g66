@@ -242,7 +242,7 @@ func (bldb *PopularityDB) UserLikeBlogByID(blogID primitive.ObjectID, userID pri
 	if err != nil {
 		return err
 	} else if updateRes.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no like were made %t", blogID, revert)
+		return fmt.Errorf("no blog found with ID %s to update OR no like were made >%t<", blogID, revert)
 	}
 	return nil
 }
@@ -266,7 +266,7 @@ func (bldb *PopularityDB) UserDisLikeBlogByID(blogID primitive.ObjectID, userID 
 	if err != nil {
 		return err
 	} else if updateRes.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no dislike were made %t", blogID, revert)
+		return fmt.Errorf("no blog found with ID %s to update OR no dislike were made >%t<", blogID, revert)
 	}
 	return nil
 }
@@ -294,7 +294,14 @@ func (bldb *PopularityDB) CommentBlogByID(blogID primitive.ObjectID, commentDTO 
 	return nil
 }
 func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) error {
-	_, err := bldb.Coll.InsertOne(bldb.Contxt, domain.PopularityDTO{BlogID: blogID})
+	_, err := bldb.Coll.InsertOne(bldb.Contxt,
+		domain.PopularityDTO{
+			BlogID:   blogID,
+			Likes:    make([]string, 0),
+			Dislikes: make([]string, 0),
+			Comments: make([]*domain.CommentDTO, 0),
+		},
+	)
 	if err != nil {
 		return err
 	}
