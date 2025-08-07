@@ -23,9 +23,13 @@ var jwtSecret = []byte("access-secret")
 var refreshSecret = []byte("refresh-secret")
 
 func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error) {
+	if user.Email == "" {
+        return "", "", errors.New("user email cannot be empty")
+    }
 	// Access Token
 	claims := jwt.MapClaims{
 		"user_id": user.UserID,
+		"email":   user.Email,
 		"role": user.Role,
 		"exp": time.Now().Add(15 * time.Minute).Unix(),
 	}
@@ -38,6 +42,7 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 	// Refresh Token
 	rtClaims :=jwt.MapClaims{
 		"user_id": user.UserID,
+		"email":   user.Email,
 		"role": user.Role,
 		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	}
@@ -103,5 +108,10 @@ func (j *JWTService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 		return nil, errors.New("invalid claims")
 	}
 
-	return token.Claims.(jwt.MapClaims), nil
+	email, ok := claims["email"].(string)
+    if !ok || email == "" {
+        return nil, errors.New("invalid or missing email in token")
+    }
+
+    return claims, nil
 }

@@ -15,7 +15,7 @@ import (
 func main() {
 	mongoClient, err := repositories.Connect()
 	if err != nil {
-		log.Fatal("Failed to connect:", err)
+		log.Fatal("❌Failed to connect:", err)
 	}
 	defer mongoClient.Disconnect()
 
@@ -32,7 +32,7 @@ func main() {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	
 	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
-	// authMeddleware := infrastructure.NewAuthMiddleware(authRepo)
+	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
 	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
 	userRepo := repositories.NewUserRepository(mongoClient)
@@ -51,6 +51,6 @@ func main() {
 	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
 	blogController := controllers.NewController(blogUsecase)
 
-	routers.Router(userController, passwordController, blogController)
+	routers.Router(userController, passwordController, blogController, authMiddleware)
 
 }

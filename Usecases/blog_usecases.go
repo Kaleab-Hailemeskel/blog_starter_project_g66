@@ -2,6 +2,7 @@ package usecases
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -46,6 +47,9 @@ func (bluc *BlogUseCase) UpdateBlogByID(blogID string, updatedBlog *domain.Blog)
 	return bluc.BlogDataBase.UpdateBlogByID(blogObjID, updatedBlog)
 }
 func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
+	if url_filter == nil {
+        return nil, fmt.Errorf("filter cannot be nil")
+    }
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
