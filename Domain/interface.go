@@ -5,18 +5,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type IAuthService interface{
+type IAuthService interface {
 	GenerateTokens(user *UserDTO) (string, string, error)
 	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
 	ValidateRefreshToken(tokenStr string) (string, error)
 	ValidateToken(tokenStr string) (jwt.MapClaims, error)
-
 }
-type IAuthRepo interface{
+type IAuthRepo interface {
 	Save(token *RefreshToken) error
 	GetByToken(token string) (*RefreshToken, error)
 	Delete(token string) error
-
 }
 
 type IUserRepository interface { // eka was here
@@ -33,7 +31,6 @@ type IUserRepository interface { // eka was here
 	// PromoteUser(userEmail string) error
 	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
-
 }
 
 type IUserValidation interface {
@@ -48,9 +45,8 @@ type IUserOTP interface {
 	DeleteOTP(email string) error
 }
 type IEmailService interface {
-    Send( email string, token string) error
-	GenerateRandomOTP() string 
-	
+	Send(email string, token string) error
+	GenerateRandomOTP() string
 }
 type IBlogRepository interface {
 	CreateBlog(blog *Blog, userID primitive.ObjectID) error
@@ -73,6 +69,7 @@ type IPopularityRepository interface {
 	BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error)
+	GetPopularityBlogByID(popValue primitive.ObjectID) (*PopularityDTO, error)
 	CloseDataBase() error
 }
 
@@ -82,6 +79,10 @@ type IBlogUseCase interface {
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination
 	GetAllBlogsByFilter(url_filter *Filter, pageNumber int) ([]*BlogDTO, error)
+	LikeBlog(blogID primitive.ObjectID, userEmail string) error
+	DisLikeBlog(blogID primitive.ObjectID, userEmail string) error
+	CommentBlog(userEmail string, comment *CommentDTO, blogID primitive.ObjectID) error
+	IncreaseView(blogID primitive.ObjectID) error
 }
 
 type IPasswordUsecase interface {
