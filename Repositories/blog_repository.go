@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	mainBlogDbName           = "blogbd_test"
+	mainBlogDbName           = "blogdb_test"
 	mainBlogDbCollName       = "blogCollection"
 	blogPopularityDbName     = "blogPop_test"
 	blogPopularityDbCollName = "blogPop_collection"
@@ -25,7 +25,7 @@ const (
 )
 
 type BlogDB struct {
-	Coll   mongo.Collection
+	Coll   *mongo.Collection
 	Contxt context.Context
 	Client *mongo.Client
 }
@@ -40,22 +40,27 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 	collection := connection.Client.Database(mainBlogDbName).Collection(mainBlogDbCollName)
 
 	return &BlogDB{
-		Coll:   *collection,
+		Coll:   collection,
 		Contxt: context.TODO(),
 		Client: connection.Client,
 	}
 
 }
-
+func (bldb *BlogDB) IsClientConnected() bool {
+	return bldb.Client != nil && bldb.Coll != nil
+}
 func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) error {
 
 	blog.LastUpdate = time.Now()
-	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO
+	log.Println("... Changing to BlogDTO")
+	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO this part is needed since the plain Blog doesn't has the json specifications
 	blogDTO.OwnerID = userID
+	log.Println("... Insetring into BlogDB")
 	_, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
 	if err != nil {
 		return fmt.Errorf("error creating blog: %w", err)
 	}
+	log.Println("\t✅ Blog Created")
 	return nil
 }
 func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
@@ -107,7 +112,7 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	limit := int64(pageSize)
 
 	filter := bson.M{}
-	{
+	if url_filter != nil {
 		if url_filter.Tag != "" {
 			// Use $regex for case-insensitive partial match on tags array
 			filter["tags"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Tag, Options: "i"}}
@@ -118,13 +123,17 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 		if url_filter.Title != "" {
 			filter["title"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Title, Options: "i"}}
 		}
-		if !url_filter.AfterDate.IsZero() {
-			filter["last_update"] = bson.M{"$gte": url_filter.AfterDate}
+		if url_filter.AfterDate != nil && !url_filter.AfterDate.IsZero() {
+			filter["last_update"] = bson.M{"$gte": *url_filter.AfterDate}
+			log.Println("\t➡️ passing", *url_filter.AfterDate)
+
+		}else{
+			log.Println("\t❌ Not passing the date")
 		}
 
 	}
-
 	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update", Value: -1}})
+	log.Println("✅ filtering finished")
 
 	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
 	if err != nil {
@@ -146,6 +155,7 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	if err = cursor.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating through filtered blog cursor: %w", err)
 	}
+	log.Println("✅ Returning from Get ALL Blogs")
 	return blogs, nil
 }
 func (bldb *BlogDB) CheckBlogExistance(blogID primitive.ObjectID) bool {
