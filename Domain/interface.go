@@ -53,7 +53,7 @@ type IEmailService interface {
 	
 }
 type IBlogRepository interface {
-	CreateBlog(blog *Blog, userID primitive.ObjectID) error
+	CreateBlog(blog *Blog, userID primitive.ObjectID) (*Blog, error)
 	FindBlogByID(blogID primitive.ObjectID) (*Blog, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
 	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
@@ -77,7 +77,7 @@ type IPopularityRepository interface {
 }
 
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) error //! Instead of userEmail as string we can pass userID instantly
+	CreateBlog(blog *Blog, userEmail string) (*Blog, error) //! Instead of userEmail as string we can pass userID instantly
 	DeleteBlogByID(blogID string) error            // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	// page number needed for the purpose of pagination

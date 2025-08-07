@@ -45,16 +45,17 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 
 }
 
-func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) error {
+func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*domain.Blog, error) {
 
 	blog.LastUpdate = time.Now()
 	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO
 	blogDTO.OwnerID = userID
 	_, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
 	if err != nil {
-		return fmt.Errorf("error creating blog: %w", err)
+		return nil, fmt.Errorf("error creating blog: %w", err)
 	}
-	return nil
+
+	return blog, nil
 }
 func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.Blog, error) {
 	filter := bson.M{"_id": blogID}
