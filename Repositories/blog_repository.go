@@ -59,7 +59,7 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) err
 	log.Println("... Insetring into BlogDB")
 	_, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
 	if err != nil {
-		return fmt.Errorf("error creating blog: %w", err)
+		return nil, fmt.Errorf("error creating blog: %w", err)
 	}
 	log.Println("\t✅ Blog Created")
 	return nil
@@ -125,14 +125,11 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 			filter["title"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Title, Options: "i"}}
 		}
 		if url_filter.AfterDate != nil && !url_filter.AfterDate.IsZero() {
-			filter["last_update_time"] = bson.M{"$gte": *url_filter.AfterDate}
-			log.Println("\t➡️ passing", *url_filter.AfterDate)
-
-		}else{
-			log.Println("\t❌ Not passing the date")
+			filter["last_update"] = bson.M{"$gte": url_filter.AfterDate}
 		}
 
 	}
+
 	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update", Value: -1}})
 	log.Println("✅ filtering finished")
 

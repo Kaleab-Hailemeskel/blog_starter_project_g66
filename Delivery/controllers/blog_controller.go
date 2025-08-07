@@ -3,6 +3,7 @@ package controllers
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,6 +22,31 @@ func NewController(blogUseCase domain.IBlogUseCase) *BlogController {
 	return &BlogController{
 		BlogUseCase: blogUseCase,
 	}
+}
+
+func (cntrl *BlogController) CreateBlog(ctx *gin.Context) {
+    var blogDTO domain.BlogDTO
+    if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
+        ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid blog data", "details": err.Error()})
+        return
+    }
+    blog := conv.ChangeToDomainBlog(&blogDTO)
+    emailVal, exists := ctx.Get("email")
+    if !exists {
+        ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User email not found in context"})
+        return
+    }
+    ownerEmail, ok := emailVal.(string)
+    if !ok {
+        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
+        return
+    }
+    createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
+    if err != nil {
+        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create blog", "details": err.Error()})
+        return
+    }
+    ctx.IndentedJSON(http.StatusCreated, gin.H{"message": "blog created", "blog": createdBlog})
 }
 
 // filter blog can also be used to get all blogs.
@@ -66,7 +92,7 @@ func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
 func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 	blogStringID := ctx.Param("id")
 	var blogDTO domain.BlogDTO
-	if err := ctx.ShouldBindBodyWithJSON(blogDTO); err != nil {
+	if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid Blog type"})
 		return
 	}
