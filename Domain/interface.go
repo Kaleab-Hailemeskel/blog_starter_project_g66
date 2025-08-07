@@ -1,13 +1,27 @@
 package domain
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type IAuthService interface{
+	GenerateTokens(user *UserDTO) (string, string, error)
+	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
+	ValidateRefreshToken(tokenStr string) (string, error)
+	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+
+}
+type IAuthRepo interface{
+	Save(token *RefreshToken) error
+	GetByToken(token string) (*RefreshToken, error)
+	Delete(token string) error
+
+}
 
 type IUserRepository interface { // eka was here
 	Create(user *User) error
-	
+
 	// UpdatePassword(userEmail string, updatedPassword string) error
 	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
@@ -17,7 +31,9 @@ type IUserRepository interface { // eka was here
 	UpdateRole(email, role string) error
 	// DemoteUser(userEmail string) error
 	// PromoteUser(userEmail string) error
+	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
+
 }
 
 type IUserValidation interface {
@@ -33,7 +49,6 @@ type IUserOTP interface {
 }
 type IEmailService interface {
     Send( email string, token string) error
-	// SendPasswordReset(to string, subject string, body string) error
 	GenerateRandomOTP() string 
 	
 }
@@ -72,4 +87,13 @@ type IBlogUseCase interface {
 type IPasswordUsecase interface {
 	GenerateResetToken(email string) (string, error)
 	ResetPassword(token, newPassword string) error
+}
+
+type IAIInteraction interface {
+	IsClientConnected() bool
+	GenerateContent(prompt string) (*AIResponse, error)
+	ParseJsonBodyToDomain(aiResponse *AIResponse) any
+	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
+	IncrementInteractionCount()
+	CloseAIConnection() error
 }

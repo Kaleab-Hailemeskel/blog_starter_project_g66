@@ -10,9 +10,21 @@ const (
 	SUPER_ADMIN = "SUPER_ADMIN"
 )
 
+type AuthTokens struct {
+	AccessToken  string 
+	RefreshToken string 
+}
+type RefreshToken struct {
+	UserID    string   
+	Token     string    
+	ExpiresAt time.Time 
+}
 type UserUnverified struct {
+	UserName string 
 	Email string
 	OTP string
+	Password string
+	Role string
 	ExpiresAt time.Time
 }
 
@@ -51,7 +63,7 @@ type Comment struct {
 type Filter struct {
 	Popularity_value int
 	Tag              string
-	AfterDate        time.Time
+	AfterDate        *time.Time
 	AuthorName       string
 	Title            string
 }

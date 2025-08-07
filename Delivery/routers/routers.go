@@ -9,7 +9,8 @@ import (
 func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController) {
 	router := gin.Default()
 
-	router.POST("/login",)
+	router.POST("/login",uc.HandleLogin)
+	router.POST("/refresh",uc.HandleRefresh)
 	router.POST("/registration", uc.Registration)
 	router.POST("/registration/verification",uc.RegistrationValidation )
 	router.POST("/forgot_password",pc.ForgotPassword)
@@ -26,7 +27,6 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 		blogRoutes.PUT("/:id", bc.UpdateBlog)      
 		blogRoutes.DELETE("/:id", bc.DeleteBlog)   
 	}
-
 	// router.POST("/blog/sreach",)
 	// router.POST("/ai",)
 	// router.POST("/ai/:id",)
