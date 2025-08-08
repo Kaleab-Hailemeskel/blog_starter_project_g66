@@ -5,7 +5,11 @@ import (
 	"blog_starter_project_g66/Domain"
 	"blog_starter_project_g66/Usecases"
 
+<<<<<<< HEAD
 	"fmt"
+=======
+	// "fmt"
+>>>>>>> edit
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -148,19 +152,16 @@ func (uc *UserController) PromoteUser(ctx *gin.Context) {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-
-    actingEmail, exists := ctx.Get("user_email")
+    actingEmail, exists := ctx.Get("email")
     if !exists {
         ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
         return
     }
-
     err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
     if err != nil {
         ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
         return
     }
-
     ctx.JSON(http.StatusOK, gin.H{"message": "User promoted to ADMIN successfully"})
 }
 
@@ -171,7 +172,7 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
         return
     }
 
-    actingEmail, exists := ctx.Get("user_email")
+    actingEmail, exists := ctx.Get("email")
     if !exists {
         ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
         return
@@ -185,6 +186,7 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
 
     ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
 }
+<<<<<<< HEAD
 func (uc *UserController)SignInWithProvider(c *gin.Context) {
 
 	provider := c.Param("provider")
@@ -247,3 +249,30 @@ func (uc *UserController)Success(c *gin.Context) {
       </div>
   `))
 }
+=======
+
+func (uc *UserController) UpdateProfile(ctx *gin.Context) {
+	var updateDTO domain.UpdateProfileDTO
+	if err := ctx.ShouldBindJSON(&updateDTO); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	emailVal, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	email, ok := emailVal.(string)
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid email in context"})
+		return
+	}
+	updatedUser, err := uc.UserUsecase.UpdateProfile(email, &updateDTO)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Profile updated", "user": updatedUser})
+}
+>>>>>>> edit

@@ -6,11 +6,12 @@ import (
 	"errors"
 	"time"
 
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
+	// "golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -77,30 +78,53 @@ func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	return err
 } 
 
-func (r *UserRepository) CreateSuperAdmin() error{
-
-	email := "superadmin@gmail.com"
-	username := "superadmin"
-	password := "123456789ADm@"
-
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := bson.M{
-		"username": username,
-		"email": email,
-		"password": string(hashedPassword),
-		"role": "SUPER_ADMIN",
-	}
-	_, err := r.collection.InsertOne(context.TODO(), user)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *UserRepository) UpdateRole(email, role string) error {
 	filter := bson.M{"email": email}
 	update := bson.M{"$set": bson.M{"role":role}}
 
 	_, err := r.collection.UpdateOne(context.TODO(), filter, update)
 	return err
+}
+
+func (repo *UserRepository) UpdateUserByEmail(email string, dto *domain.UpdateProfileDTO) (*domain.UserDTO, error) {
+	filter := bson.M{"email": email}
+
+	updateFields := bson.M{}
+	if dto.UserName != "" {
+		updateFields["username"] = dto.UserName
+	}
+	if dto.PersonalBio != "" {
+		updateFields["personal_bio"] = dto.PersonalBio
+	}
+	if dto.ProfilePic != "" {
+		updateFields["profile_pic"] = dto.ProfilePic
+	}
+	if dto.PhoneNum != "" {
+		updateFields["phone_num"] = dto.PhoneNum
+	}
+	if dto.TelegramHandle != "" {
+		updateFields["telegram_handle"] = dto.TelegramHandle
+	}
+	if dto.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		updateFields["password"] = string(hashedPassword)
+	}
+
+	update := bson.M{"$set": updateFields}
+
+	var updatedUser domain.UserDTO
+	err := repo.collection.FindOneAndUpdate(
+		context.TODO(),
+		filter,
+		update,
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updatedUser)
+
+	if err != nil {
+		return nil, err
+	}
+	return &updatedUser, nil
 }
