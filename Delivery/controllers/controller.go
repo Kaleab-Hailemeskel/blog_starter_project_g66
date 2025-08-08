@@ -4,12 +4,7 @@ import (
 	"blog_starter_project_g66/Delivery/converter"
 	"blog_starter_project_g66/Domain"
 	"blog_starter_project_g66/Usecases"
-
-<<<<<<< HEAD
 	"fmt"
-=======
-	// "fmt"
->>>>>>> edit
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -186,7 +181,7 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
 
     ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
 }
-<<<<<<< HEAD
+
 func (uc *UserController)SignInWithProvider(c *gin.Context) {
 
 	provider := c.Param("provider")
@@ -249,7 +244,6 @@ func (uc *UserController)Success(c *gin.Context) {
       </div>
   `))
 }
-=======
 
 func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	var updateDTO domain.UpdateProfileDTO
@@ -275,4 +269,3 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Profile updated", "user": updatedUser})
 }
->>>>>>> edit
