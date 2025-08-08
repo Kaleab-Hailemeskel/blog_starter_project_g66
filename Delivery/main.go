@@ -44,7 +44,7 @@ func main() {
 	passwaordService := infrastructure.NewPasswordService()
 	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService, authService, authRepo)
 	userController := controllers.NewUserUsecase(userUsecase,oauthUsecase)
-	userRepo.CreateSuperAdmin()
+
 
 	passwordUsecase := usecases.NewPasswordUsecase(userRepo, jwtSecret)
 	passwordController := controllers.NewPasswordController(passwordUsecase)
