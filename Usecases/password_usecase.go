@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 	"errors"
 	"fmt"
 	"time"
@@ -11,13 +11,13 @@ import (
 )
 
 type passwordUsecase struct {
-	userRepo 		domain.IUserRepository
-	jwtSecret 		string 
+	userRepo  domain.IUserRepository
+	jwtSecret string
 }
 
 func NewPasswordUsecase(repo domain.IUserRepository, jwtSec string) domain.IPasswordUsecase {
 	return &passwordUsecase{
-		userRepo: repo,
+		userRepo:  repo,
 		jwtSecret: jwtSec,
 	}
 }
@@ -29,9 +29,9 @@ func (u *passwordUsecase) GenerateResetToken(email string) (string, error) {
 	}
 
 	claims := jwt.MapClaims{
-		"user_id": 	user.UserID.Hex(),
-		"email":	user.Email,
-		"exp":		time.Now().Add(15 * time.Minute).Unix(),
+		"user_id": user.UserID.Hex(),
+		"email":   user.Email,
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
