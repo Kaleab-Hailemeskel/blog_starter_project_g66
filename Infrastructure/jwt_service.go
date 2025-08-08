@@ -26,11 +26,20 @@ var jwtSecret = []byte("access-secret")
 var refreshSecret = []byte("refresh-secret")
 
 func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error) {
+	if user.Email == "" {
+        return "", "", errors.New("user email cannot be empty")
+    }
 	// Access Token
 	claims := jwt.MapClaims{
 		"user_id": user.UserID,
+<<<<<<< HEAD
 		"role":    user.Role,
 		"exp":     time.Now().Add(15 * time.Minute).Unix(),
+=======
+		"email":   user.Email,
+		"role": user.Role,
+		"exp": time.Now().Add(15 * time.Minute).Unix(),
+>>>>>>> 943ca315c0dfc12032f7b2c893340c3c8fe3bd74
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	atString, err := accessToken.SignedString(jwtSecret)
@@ -41,8 +50,14 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 	// Refresh Token
 	rtClaims := jwt.MapClaims{
 		"user_id": user.UserID,
+<<<<<<< HEAD
 		"role":    user.Role,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+=======
+		"email":   user.Email,
+		"role": user.Role,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+>>>>>>> 943ca315c0dfc12032f7b2c893340c3c8fe3bd74
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	rtString, err := refreshToken.SignedString(refreshSecret)
@@ -105,7 +120,12 @@ func (j *JWTService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 		return nil, errors.New("invalid claims")
 	}
 
-	return token.Claims.(jwt.MapClaims), nil
+	email, ok := claims["email"].(string)
+    if !ok || email == "" {
+        return nil, errors.New("invalid or missing email in token")
+    }
+
+    return claims, nil
 }
 
 func (o *JWTService) OAuthLogin(req *http.Request, res http.ResponseWriter) (*domain.UserDTO, error) {

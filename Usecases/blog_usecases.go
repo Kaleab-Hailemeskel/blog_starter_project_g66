@@ -2,6 +2,7 @@ package usecases
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -12,20 +13,24 @@ type BlogUseCase struct {
 	PopularityDataBase domain.IPopularityRepository
 }
 
-func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository, PopRepo domain.IPopularityRepository) *BlogUseCase {
+func NewBlogUseCase(blogRepo domain.IBlogRepository, userRepo domain.IUserRepository, PopRepo domain.IPopularityRepository) domain.IBlogUseCase {
 	return &BlogUseCase{
 		BlogDataBase:       blogRepo,
 		UserDataBase:       userRepo,
 		PopularityDataBase: PopRepo,
 	}
 }
-func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) error {
+func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) (*domain.Blog, error) {
 	user, err := bluc.UserDataBase.FindByEmail(ownerEmail)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	userID := user.UserID
-	return bluc.BlogDataBase.CreateBlog(blog, userID)
+	createdBlog, err := bluc.BlogDataBase.CreateBlog(blog, userID)
+	if err != nil {
+		return nil, err
+	}
+	return createdBlog, nil
 }
 func (bluc *BlogUseCase) DeleteBlogByID(blogID string) error {
 	blogObjID, err := primitive.ObjectIDFromHex(blogID)
@@ -42,12 +47,27 @@ func (bluc *BlogUseCase) UpdateBlogByID(blogID string, updatedBlog *domain.Blog)
 	return bluc.BlogDataBase.UpdateBlogByID(blogObjID, updatedBlog)
 }
 func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
+	if url_filter == nil {
+        return nil, fmt.Errorf("filter cannot be nil")
+    }
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
-	return bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber)
-}
+	if res, err := bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber); err != nil {
+		return nil, err
+	} else {
 
+		func() { // Go routine might be implemented here
+			for _, val := range res {
+				bluc.IncreaseView(val.BlogID)
+			}
+		}()
+		return res, nil
+	}
+}
+func (bluc *BlogUseCase) GetBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
+	return bluc.BlogDataBase.FindBlogByID(blogID)
+}
 func (blue *BlogUseCase) LikeBlog(blogID primitive.ObjectID, userEmail string) error {
 	userDTO, err := blue.UserDataBase.FindByEmail(userEmail)
 	if err != nil {

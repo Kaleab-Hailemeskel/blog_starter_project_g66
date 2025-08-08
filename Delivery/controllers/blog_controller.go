@@ -3,15 +3,17 @@ package controllers
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BlogController struct {
 	BlogUseCase domain.IBlogUseCase
-	// UserUseCase domain.IUserUseCase  //! For the time being it is commented out
+	// UserUseCase domain.IUserUseCase //! For the time being it is commented out
 }
 
 var queryStrings = []string{"tag", "author", "title", "popularity", "date", "p"}
@@ -20,6 +22,31 @@ func NewController(blogUseCase domain.IBlogUseCase) *BlogController {
 	return &BlogController{
 		BlogUseCase: blogUseCase,
 	}
+}
+
+func (cntrl *BlogController) CreateBlog(ctx *gin.Context) {
+    var blogDTO domain.BlogDTO
+    if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
+        ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid blog data", "details": err.Error()})
+        return
+    }
+    blog := conv.ChangeToDomainBlog(&blogDTO)
+    emailVal, exists := ctx.Get("email")
+    if !exists {
+        ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User email not found in context"})
+        return
+    }
+    ownerEmail, ok := emailVal.(string)
+    if !ok {
+        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
+        return
+    }
+    createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
+    if err != nil {
+        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create blog", "details": err.Error()})
+        return
+    }
+    ctx.IndentedJSON(http.StatusCreated, gin.H{"message": "blog created", "blog": createdBlog})
 }
 
 // filter blog can also be used to get all blogs.
@@ -65,7 +92,7 @@ func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
 func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 	blogStringID := ctx.Param("id")
 	var blogDTO domain.BlogDTO
-	if err := ctx.ShouldBindBodyWithJSON(blogDTO); err != nil {
+	if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid Blog type"})
 		return
 	}
@@ -79,11 +106,82 @@ func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 
 // ? From Popularity
 func (cntrl *BlogController) LikeBlog(ctx *gin.Context) {
-	//  get blog ID from param
-	//  change it to primitiveobj
-	//	get the user email
-	//	send the blogID to usecase.LikeBlog() , with the user email.
+	// Get blog ID from param
+	blogIDStr := ctx.Param("blog_id")
+
+	// Change it to primitive.ObjectID
+	blogID, err := primitive.ObjectIDFromHex(blogIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid blog ID format"})
+		return
+	}
+
+	// Get the user email from the context (assuming it's set by middleware)
+	userEmail, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found"})
+		return
+	}
+	// Send the blogID and user email to usecase.LikeBlog()
+	if err := cntrl.BlogUseCase.LikeBlog(blogID, userEmail.(string)); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to like blog" + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Blog liked successfully"})
 }
-func (cntrl *BlogController) DisLikeBlog(ctx *gin.Context)  {}
-func (cntrl *BlogController) CommentBlog(ctx *gin.Context)  {}
-func (cntrl *BlogController) IncreaseView(ctx *gin.Context) {}
+func (cntrl *BlogController) DisLikeBlog(ctx *gin.Context) {
+	// Get blog ID from param
+	blogIDStr := ctx.Param("blog_id")
+
+	// Change it to primitive.ObjectID
+	blogID, err := primitive.ObjectIDFromHex(blogIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid blog ID format"})
+		return
+	}
+
+	// Get the user email from the context (assuming it's set by middleware)
+	userEmail, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found"})
+		return
+	}
+	// Send the blogID and user email to usecase.LikeBlog()
+	if err := cntrl.BlogUseCase.DisLikeBlog(blogID, userEmail.(string)); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to dislike blog" + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Blog liked successfully"})
+}
+func (cntrl *BlogController) CommentBlog(ctx *gin.Context) {
+	// Get the comment from the Json Body
+	var commentDTO domain.CommentDTO
+	if err := ctx.ShouldBindJSON(&commentDTO); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "invalid comment format"})
+	}
+	// Get blog ID from param
+	blogIDStr := ctx.Param("blog_id")
+	// Change it to primitive.ObjectID
+	blogID, err := primitive.ObjectIDFromHex(blogIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid blog ID format"})
+		return
+	}
+
+	// Get the user email from the context (assuming it's set by middleware)
+	userEmail, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found"})
+		return
+	}
+	// Send the blogID and user email to usecase.LikeBlog()
+	if err := cntrl.BlogUseCase.CommentBlog(userEmail.(string), &commentDTO, blogID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to like blog" + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Commented successfully"})
+}
+
