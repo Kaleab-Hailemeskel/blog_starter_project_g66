@@ -197,3 +197,7 @@ func (a *UserUsecase) Refresh(oldRefreshToken string) (*domain.AuthTokens, error
 func (uc *UserUsecase) Logout(refreshToken string) error {
 	return uc.authRepo.Delete(refreshToken)
 }
+
+func (uc *UserUsecase) UpdateProfile(email string, dto *domain.UpdateProfileDTO) (*domain.UserDTO, error) {
+	return uc.userinterface.UpdateUserByEmail(email, dto)
+}
