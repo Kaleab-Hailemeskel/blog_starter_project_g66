@@ -60,3 +60,13 @@ type CommentDTO struct {
 	UserName string             `json:"user_name" bson:"user_name"`
 	Comment  string             `json:"comment" bson:"comment"`
 }
+
+type UpdateProfileDTO struct {
+	UserName       string             `json:"username" bson:"username"`
+	PersonalBio    string             `json:"personal_bio" bson:"personal_bio"`
+	ProfilePic     string             `json:"profile_pic" bson:"profile_pic"` // store as URL or base64
+	Email          string             `json:"email" bson:"email"`
+	PhoneNum       string             `json:"phone_num" bson:"phone_num"` // validate format
+	TelegramHandle string             `json:"telegram_handle" bson:"telegram_handle"`
+	Password       string             `json:"password" bson:"password"` // securely hashed
+}

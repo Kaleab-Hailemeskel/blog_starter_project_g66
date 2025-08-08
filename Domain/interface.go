@@ -25,7 +25,7 @@ type IUserRepository interface { // eka was here
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
-	CreateSuperAdmin() error
+	// CreateSuperAdmin() error
 	UpdateRole(email, role string) error
 	// DemoteUser(userEmail string) error
 	// PromoteUser(userEmail string) error

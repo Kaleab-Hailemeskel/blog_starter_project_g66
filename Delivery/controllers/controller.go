@@ -4,6 +4,7 @@ import (
 	"blog_starter_project_g66/Delivery/converter"
 	"blog_starter_project_g66/Domain"
 	"blog_starter_project_g66/Usecases"
+	// "fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -144,7 +145,7 @@ func (uc *UserController) PromoteUser(ctx *gin.Context) {
         return
     }
 
-    actingEmail, exists := ctx.Get("user_email")
+    actingEmail, exists := ctx.Get("email")
     if !exists {
         ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
         return
@@ -166,7 +167,7 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
         return
     }
 
-    actingEmail, exists := ctx.Get("user_email")
+    actingEmail, exists := ctx.Get("email")
     if !exists {
         ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
         return
@@ -180,3 +181,23 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
 
     ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
 }
+
+// func (uc *UserController) EditProfile(ctx *gin.Context) {
+// 	var updateDTO domain.UpdateProfileDTO
+// 	if err := ctx.ShouldBindJSON(&updateDTO); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+// 		return
+// 	}
+
+// 	emailVal, exists := ctx.Get("email")
+// 	if !exists {
+// 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+// 	}
+// 	ownerEmail, ok := emailVal.(string)
+//     if !ok {
+//         ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
+//         return
+//     }
+
+	
+// }

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
+	// "golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -77,25 +77,25 @@ func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	return err
 } 
 
-func (r *UserRepository) CreateSuperAdmin() error{
+// func (r *UserRepository) CreateSuperAdmin() error{
 
-	email := "superadmin@gmail.com"
-	username := "superadmin"
-	password := "123456789ADm@"
+// 	email := "superadmin@gmail.com"
+// 	username := "superadmin"
+// 	password := "123456789ADm@"
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := bson.M{
-		"username": username,
-		"email": email,
-		"password": string(hashedPassword),
-		"role": "SUPER_ADMIN",
-	}
-	_, err := r.collection.InsertOne(context.TODO(), user)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+// 	user := bson.M{
+// 		"username": username,
+// 		"email": email,
+// 		"password": string(hashedPassword),
+// 		"role": "SUPER_ADMIN",
+// 	}
+// 	_, err := r.collection.InsertOne(context.TODO(), user)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (r *UserRepository) UpdateRole(email, role string) error {
 	filter := bson.M{"email": email}
