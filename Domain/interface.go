@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -10,6 +12,7 @@ type IAuthService interface {
 	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
 	ValidateRefreshToken(tokenStr string) (string, error)
 	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
 }
 type IAuthRepo interface {
 	Save(token *RefreshToken) error

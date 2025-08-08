@@ -5,6 +5,7 @@ import (
 	infrastructure "blog_starter_project_g66/Infrastructure"
 
 	"github.com/gin-gonic/gin"
+	
 )
 
 func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController, auth *infrastructure.AuthMiddleware) {
@@ -42,6 +43,10 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	// router.POST("/blog/sreach",)
 	// router.POST("/ai",)
 	// router.POST("/ai/:id",)
+
+	router.GET("/auth/:provider", uc.SignInWithProvider)
+	router.GET("/auth/:provider/callback", uc.CallbackHandler)
+	router.GET("/success", uc.Success)
 
 	router.Run()
 }

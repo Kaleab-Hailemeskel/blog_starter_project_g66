@@ -1,11 +1,14 @@
 package infrastructure
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 	"errors"
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/markbates/goth/gothic"
 	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,7 +18,7 @@ type JWTService struct {
 
 func NewJWTService(auth domain.IAuthRepo) *JWTService {
 	return &JWTService{
-		authRepo:auth ,
+		authRepo: auth,
 	}
 }
 
@@ -24,14 +27,14 @@ var refreshSecret = []byte("refresh-secret")
 
 func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error) {
 	if user.Email == "" {
-        return "", "", errors.New("user email cannot be empty")
-    }
+		return "", "", errors.New("user email cannot be empty")
+	}
 	// Access Token
 	claims := jwt.MapClaims{
 		"user_id": user.UserID,
 		"email":   user.Email,
-		"role": user.Role,
-		"exp": time.Now().Add(15 * time.Minute).Unix(),
+		"role":    user.Role,
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	atString, err := accessToken.SignedString(jwtSecret)
@@ -40,11 +43,11 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 	}
 
 	// Refresh Token
-	rtClaims :=jwt.MapClaims{
+	rtClaims := jwt.MapClaims{
 		"user_id": user.UserID,
 		"email":   user.Email,
-		"role": user.Role,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		"role":    user.Role,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	rtString, err := refreshToken.SignedString(refreshSecret)
@@ -55,9 +58,8 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 	return atString, rtString, nil
 }
 
-
 func (j *JWTService) ValidateRefreshToken(tokenStr string) (string, error) {
-	 token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return refreshSecret, nil
 	})
 
@@ -109,9 +111,22 @@ func (j *JWTService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	}
 
 	email, ok := claims["email"].(string)
-    if !ok || email == "" {
-        return nil, errors.New("invalid or missing email in token")
-    }
+	if !ok || email == "" {
+		return nil, errors.New("invalid or missing email in token")
+	}
 
-    return claims, nil
+	return claims, nil
+}
+
+func (o *JWTService) OAuthLogin(req *http.Request, res http.ResponseWriter) (*domain.UserDTO, error) {
+	user, err := gothic.CompleteUserAuth(res, req)
+	fmt.Print("+++++++", req, "+++++++", err, "------")
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.UserDTO{
+		Email:    user.Email,
+		UserName: user.Name,
+	}, nil
 }

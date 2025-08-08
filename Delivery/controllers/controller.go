@@ -4,22 +4,27 @@ import (
 	"blog_starter_project_g66/Delivery/converter"
 	"blog_starter_project_g66/Domain"
 	"blog_starter_project_g66/Usecases"
+
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/markbates/goth/gothic"
 )
 
 type UserController struct {
 	UserUsecase *usecases.UserUsecase
+	OauthUsecase *usecases.OAuthUsecase
 }
 
 type PromoteDemoteRequest struct {
 	TargetEmail string `json:"target_email" binding:"required,email"`
 }
 
-func NewUserUsecase(uuc *usecases.UserUsecase) *UserController {
+func NewUserUsecase(uuc *usecases.UserUsecase,oat *usecases.OAuthUsecase) *UserController {
 	return &UserController{
 		UserUsecase: uuc,
+		OauthUsecase: oat,
 	}
 }
 func (uc *UserController) Registration(ctx *gin.Context) {
@@ -179,4 +184,66 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
     }
 
     ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
+}
+func (uc *UserController)SignInWithProvider(c *gin.Context) {
+
+	provider := c.Param("provider")
+	q := c.Request.URL.Query()
+	q.Add("provider", provider)
+	c.Request.URL.RawQuery = q.Encode()
+	// req := c.Request
+    // req = req.WithContext(context.WithValue(req.Context(), "provider", provider))
+	gothic.BeginAuthHandler(c.Writer, c.Request)
+}
+
+func (uc *UserController)CallbackHandler(c *gin.Context) {
+
+	provider := c.Param("provider")
+	q := c.Request.URL.Query()
+	q.Add("provider", provider)
+	c.Request.URL.RawQuery = q.Encode()
+	// req := c.Request
+	// fmt.Println("^^^^^",provider)
+	// req = req.WithContext(context.WithValue(c.Request.Context(), "provider", provider))
+
+	user, err := uc.OauthUsecase.HandleOAuthLogin(c.Request, c.Writer)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+	//   _, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	// 	return
+	// }
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged in", "user": user})
+
+	// user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+
+	// if err != nil {
+	// 	c.AbortWithError(http.StatusInternalServerError, err)
+	// 	return
+	// }
+
+	c.Redirect(http.StatusTemporaryRedirect, "/success")
+}
+func (uc *UserController)Success(c *gin.Context) {
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", fmt.Appendf(nil, `
+      <div style="
+          background-color: #fff;
+          padding: 40px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          text-align: center;
+      ">
+          <h1 style="
+              color: #333;
+              margin-bottom: 20px;
+          ">You have Successfull signed in!</h1>
+          
+          </div>
+      </div>
+  `))
 }
