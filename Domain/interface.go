@@ -65,8 +65,11 @@ type IPopularityRepository interface {
 	UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error // revert boolean helps to undo the like while disliking the blog
 	UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error
 	CreateBlogPopularity(blogID primitive.ObjectID) error
-	CommentBlogByID(blogID primitive.ObjectID, commentDTO *CommentDTO) error
+	UpdatePopularityValueByBlogID(blogID primitive.ObjectID, calculatedValue int) error
+	CommentBlogByID(blogID primitive.ObjectID,  commentDTO *CommentDTO) error
 	IncreaseBlogViewByID(blogID primitive.ObjectID) error
+	BlogPostViewCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostPopularityValueByID(blogID primitive.ObjectID) (int, error)
 	BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error)
@@ -76,7 +79,7 @@ type IPopularityRepository interface {
 
 type IBlogUseCase interface {
 	CreateBlog(blog *Blog, userEmail string) (*Blog, error) //! Instead of userEmail as string we can pass userID instantly
-	DeleteBlogByID(blogID string) error            // the controller will pass the a string from the url the usecase will change it to the objectID
+	DeleteBlogByID(blogID string) error                     // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	// page number needed for the purpose of pagination

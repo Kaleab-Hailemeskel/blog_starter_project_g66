@@ -100,11 +100,11 @@ func (uc *UserUsecase) PromoteUser(actor, target string) error{
 	actUser, err := uc.userinterface.FindByEmail(actor)
 
 	if err != nil {
-		return fmt.Errorf("User not found")
+		return fmt.Errorf("user not found")
 	}
 
 	if actUser.Role != "SUPER_ADMIN"{
-		return fmt.Errorf("Unauthorized user")
+		return fmt.Errorf("unauthorized user")
 	}
 
 	return uc.userinterface.UpdateRole(target, "ADMIN")
@@ -113,10 +113,10 @@ func (uc *UserUsecase) PromoteUser(actor, target string) error{
 func (uc *UserUsecase) DemoteUser(actor, target string) error{
 	actUser, err := uc.userinterface.FindByEmail(actor)
 	if err != nil {
-		return fmt.Errorf("User not found")
+		return fmt.Errorf("user not found")
 	}
 	if actUser.Role != "SUPER_ADMIN"{
-		return fmt.Errorf("Unauthorized user")
+		return fmt.Errorf("unauthorized user")
 	}
 
 	return uc.userinterface.UpdateRole(target, "USER")

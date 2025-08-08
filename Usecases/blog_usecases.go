@@ -100,7 +100,7 @@ func (blue *BlogUseCase) CommentBlog(userEmail string, comment *domain.CommentDT
 		return err
 	}
 	// setting name and ID on the comment so that the commentBlogByID will track it and update the comment
-	comment.UserID = userDTO.UserID
+	comment.OwnerID = userDTO.UserID
 	comment.UserName = userDTO.UserName
 	return blue.PopularityDataBase.CommentBlogByID(blogID, comment)
 }

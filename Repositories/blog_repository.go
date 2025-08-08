@@ -271,26 +271,58 @@ func (bldb *PopularityDB) UserDisLikeBlogByID(blogID primitive.ObjectID, userID 
 	return nil
 }
 func (bldb *PopularityDB) CommentBlogByID(blogID primitive.ObjectID, commentDTO *domain.CommentDTO) error {
+	// First, try to update an existing comment.
 	commentFilter := bson.M{
 		"blog_id":      blogID,
-		"comments._id": commentDTO.UserID,
+		"comments._id": commentDTO.CommentID,
 	}
+	log.Printf("==> INSIDE: %+v\n", commentDTO)
 	updatedComment := bson.M{
 		"$set": bson.M{
-			"comments.$._id":       commentDTO.UserID,
+			"comments.$._id":       commentDTO.CommentID,
+			"comments.$.owner_id":  commentDTO.OwnerID,
 			"comments.$.user_name": commentDTO.UserName,
 			"comments.$.comment":   commentDTO.Comment,
 		},
 	}
-	//? if the comment was found in that blog it will update it other wise it will create a new comment
-	opts := options.Update().SetUpsert(true)
-	result, err := bldb.Coll.UpdateOne(bldb.Contxt, commentFilter, updatedComment, opts)
+
+	updateResult, err := bldb.Coll.UpdateOne(bldb.Contxt, commentFilter, updatedComment)
 	if err != nil {
 		return err
 	}
-	if result.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no comment were made", blogID)
+	log.Printf("==> %+v", *updateResult)
+
+	// If no comment was updated, and there were no comment matched it means it doesn't exist, so we insert it. I think the MatchedCount would work fine without the ModifedCount checking...... but just in case
+	if updateResult.ModifiedCount == 0 { //? && updateResult.MatchedCount <= 0  //! After Yohanna showed me the youtube commenting dupplication is allowed
+
+		// The filter is for the blog itself.
+		insertFilter := bson.M{"blog_id": blogID}
+
+		// The update operation uses $push to add a new comment to the array.
+		newComment := bson.M{
+			"$push": bson.M{
+				"comments": bson.M{
+					"_id":       primitive.NewObjectID(),
+					"owner_id":  commentDTO.OwnerID,
+					"user_name": commentDTO.UserName,
+					"comment":   commentDTO.Comment,
+				},
+			},
+		}
+
+		// Use SetUpsert(true) to create the blog document if it doesn't exist.
+		opts := options.Update().SetUpsert(true)
+
+		insertResult, err := bldb.Coll.UpdateOne(bldb.Contxt, insertFilter, newComment, opts)
+		if err != nil {
+			return err
+		}
+
+		if insertResult.ModifiedCount == 0 && insertResult.UpsertedCount == 0 {
+			return fmt.Errorf("could not update or insert comment")
+		}
 	}
+
 	return nil
 }
 func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) error {
@@ -321,7 +353,29 @@ func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error 
 	}
 	return nil
 }
+func (bldb *PopularityDB) BlogPostViewCountByID(blogID primitive.ObjectID) (int, error) {
+	if res, err := bldb.GetPopularityBlogByID(blogID); err != nil {
+		return 0, err
+	} else {
+		return res.ViewCount, nil
+	}
+}
+func (bldb *PopularityDB) BlogPostPopularityValueByID(blogID primitive.ObjectID) (int, error) {
+	if res, err := bldb.GetPopularityBlogByID(blogID); err != nil {
+		return 0, err
+	} else {
+		return res.PopularityValue, nil
+	}
+}
+func (bldb *PopularityDB) UpdatePopularityValueByBlogID(blogID primitive.ObjectID, calculatedValue int) error {
 
+	filter := bson.M{"blog_id": blogID}
+	popValSet := bson.M{
+		"$set": bson.M{"popularity_value": calculatedValue},
+	}
+	bldb.Coll.UpdateOne(bldb.Contxt, filter, popValSet)
+	return nil
+}
 func (bldb *PopularityDB) BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error) {
 	// Define the aggregation pipeline to match the document and count the 'likes' array.
 	pipeline := mongo.Pipeline{

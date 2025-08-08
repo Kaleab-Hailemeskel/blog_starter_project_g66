@@ -56,7 +56,8 @@ type PopularityDTO struct {
 }
 
 type CommentDTO struct {
-	UserID   primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	UserName string             `json:"user_name" bson:"user_name"`
-	Comment  string             `json:"comment" bson:"comment"`
+	CommentID primitive.ObjectID `json:"_id," bson:"_id,"`
+	OwnerID   primitive.ObjectID `json:"owner_id" bson:"owner_id"`
+	UserName  string             `json:"user_name" bson:"user_name"`
+	Comment   string             `json:"comment" bson:"comment"`
 }
