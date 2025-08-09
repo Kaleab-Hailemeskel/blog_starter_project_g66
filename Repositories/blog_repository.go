@@ -49,7 +49,7 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 func (bldb *BlogDB) IsClientConnected() bool {
 	return bldb.Client != nil && bldb.Coll != nil
 }
-func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*domain.Blog, error) {
+func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*domain.BlogDTO, error) {
 	//
 	blog.LastUpdate = time.Now()
 	log.Println("➡️➡️ ", blog.LastUpdate, "Now: ", time.Now())
@@ -57,12 +57,13 @@ func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*d
 	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO this part is needed since the plain Blog doesn't has the json specifications
 	blogDTO.OwnerID = userID
 	log.Println("... Insetring into BlogDB")
-	_, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
+	insertInfo, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
 	if err != nil {
 		return nil, fmt.Errorf("error creating blog: %w", err)
 	}
 	log.Println("\t✅ Blog Created")
-	return blog, nil
+	blogDTO.BlogID = insertInfo.InsertedID.(primitive.ObjectID)
+	return blogDTO, nil
 }
 func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
 	filter := bson.M{"_id": blogID}
@@ -325,19 +326,19 @@ func (bldb *PopularityDB) CommentBlogByID(blogID primitive.ObjectID, commentDTO 
 
 	return nil
 }
-func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) error {
-	_, err := bldb.Coll.InsertOne(bldb.Contxt,
-		domain.PopularityDTO{
-			BlogID:   blogID,
-			Likes:    make([]string, 0),
-			Dislikes: make([]string, 0),
-			Comments: make([]*domain.CommentDTO, 0),
-		},
-	)
-	if err != nil {
-		return err
+func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) (*domain.PopularityDTO, error) {
+	newDTOBlogPopularity := domain.PopularityDTO{
+		BlogID:   blogID,
+		Likes:    make([]string, 0),
+		Dislikes: make([]string, 0),
+		Comments: make([]*domain.CommentDTO, 0),
 	}
-	return nil
+	insertInfo, err := bldb.Coll.InsertOne(bldb.Contxt, newDTOBlogPopularity)
+	if err != nil {
+		return nil, err
+	}
+	newDTOBlogPopularity.PopularityID = insertInfo.InsertedID.(primitive.ObjectID)
+	return &newDTOBlogPopularity, nil
 }
 func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error {
 	filter := bson.M{"blog_id": blogID}
