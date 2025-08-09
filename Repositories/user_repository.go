@@ -98,26 +98,6 @@ func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	return err
 }
 
-func (r *UserRepository) CreateSuperAdmin() error {
-
-	email := "superadmin@gmail.com"
-	username := "superadmin"
-	password := "123456789ADm@"
-
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := bson.M{
-		"username": username,
-		"email":    email,
-		"password": string(hashedPassword),
-		"role":     "SUPER_ADMIN",
-	}
-	_, err := r.collection.InsertOne(r.Contxt, user)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *UserRepository) UpdateRole(email, role string) error {
 	filter := bson.M{"email": email}
 	update := bson.M{"$set": bson.M{"role": role}}
