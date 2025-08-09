@@ -35,7 +35,7 @@ func main() {
 	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
 	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
-	userRepo := repositories.NewUserRepository(mongoClient)
+	userRepo := repositories.NewUserRepository()
 	otpService := repositories.NewUserOTPRepository(mongoClient)
 	passwaordService := infrastructure.NewPasswordService()
 	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService,authService,authRepo)
