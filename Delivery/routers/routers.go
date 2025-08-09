@@ -5,6 +5,7 @@ import (
 	infrastructure "blog_starter_project_g66/Infrastructure"
 
 	"github.com/gin-gonic/gin"
+	
 )
 
 func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController, auth *infrastructure.AuthMiddleware) {
@@ -16,6 +17,7 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	router.POST("/registration/verification",uc.RegistrationValidation )
 	router.POST("/forgot_password",pc.ForgotPassword)
 	router.PUT("/reset_password", pc.ResetPassword)
+
 	blogRoutes := router.Group("/blog")
 	blogRoutes.Use(auth.JWTAuthMiddleware())
 	{
@@ -27,21 +29,25 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	}
 
 	adminRoutes := router.Group("/")
-	adminRoutes.Use(auth.JWTAuthMiddleware(), infrastructure.RoleMiddleware("admin"))
+	adminRoutes.Use(auth.JWTAuthMiddleware(), infrastructure.RoleMiddleware("SUPER_ADMIN"))
 	{
-		router.POST("/promote_user", uc.PromoteUser)
-		router.POST("/demote_user", uc.DemoteUser)
+		adminRoutes.POST("/promote_user", uc.PromoteUser)
+		adminRoutes.POST("/demote_user", uc.DemoteUser)
 	}
 
-	userRoutes := router.Group("/")
+	userRoutes := router.Group("/user")
 	userRoutes.Use(auth.JWTAuthMiddleware())
 	{
-		router.POST("/logout",)
-		router.PUT("/editprofile")
+		userRoutes.POST("/logout",uc.HandleLogout)
+		userRoutes.PUT("/profile", uc.UpdateProfile)
 	}
 	// router.POST("/blog/sreach",)
 	// router.POST("/ai",)
 	// router.POST("/ai/:id",)
+
+	router.GET("/auth/:provider", uc.SignInWithProvider)
+	router.GET("/auth/:provider/callback", uc.CallbackHandler)
+	router.GET("/success", uc.Success)
 
 	router.Run()
 }

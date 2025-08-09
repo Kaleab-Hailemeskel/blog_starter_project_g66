@@ -12,7 +12,7 @@ type AuthMiddleware struct {
 	authRepo domain.IAuthRepo
 }
 
-func NewAuthMiddleware(auth domain.IAuthRepo) *AuthMiddleware{
+func NewAuthMiddleware(auth domain.IAuthRepo) *AuthMiddleware {
 	return &AuthMiddleware{
 		authRepo: auth,
 	}

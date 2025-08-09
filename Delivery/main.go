@@ -2,10 +2,11 @@ package main
 
 import (
 	"blog_starter_project_g66/Delivery/controllers"
+	"blog_starter_project_g66/Delivery/oauth"
 	"blog_starter_project_g66/Delivery/routers"
-	"blog_starter_project_g66/Infrastructure"
-	"blog_starter_project_g66/Repositories"
-	"blog_starter_project_g66/Usecases"
+	infrastructure "blog_starter_project_g66/Infrastructure"
+	repositories "blog_starter_project_g66/Repositories"
+	usecases "blog_starter_project_g66/Usecases"
 	"log"
 	"os"
 
@@ -31,16 +32,19 @@ func main() {
 	user := os.Getenv("SMTP_USER")
 	jwtSecret := os.Getenv("JWT_SECRET")
 	
+	oauth.InitOAuth()
+
 	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
 	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
 	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
 	userRepo := repositories.NewUserRepository()
+	oauthUsecase :=usecases.NewOAuthUsecase(userRepo,authService)
 	otpService := repositories.NewUserOTPRepository(mongoClient)
 	passwaordService := infrastructure.NewPasswordService()
-	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService,authService,authRepo)
-	userController := controllers.NewUserUsecase(userUsecase)
-	userRepo.CreateSuperAdmin()
+	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService, authService, authRepo)
+	userController := controllers.NewUserUsecase(userUsecase,oauthUsecase)
+
 
 	passwordUsecase := usecases.NewPasswordUsecase(userRepo, jwtSecret)
 	passwordController := controllers.NewPasswordController(passwordUsecase)

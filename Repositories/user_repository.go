@@ -11,7 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
+	// "golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -122,4 +124,47 @@ func (r *UserRepository) UpdateRole(email, role string) error {
 
 	_, err := r.collection.UpdateOne(r.Contxt, filter, update)
 	return err
+}
+
+func (repo *UserRepository) UpdateUserByEmail(email string, dto *domain.UpdateProfileDTO) (*domain.UserDTO, error) {
+	filter := bson.M{"email": email}
+
+	updateFields := bson.M{}
+	if dto.UserName != "" {
+		updateFields["username"] = dto.UserName
+	}
+	if dto.PersonalBio != "" {
+		updateFields["personal_bio"] = dto.PersonalBio
+	}
+	if dto.ProfilePic != "" {
+		updateFields["profile_pic"] = dto.ProfilePic
+	}
+	if dto.PhoneNum != "" {
+		updateFields["phone_num"] = dto.PhoneNum
+	}
+	if dto.TelegramHandle != "" {
+		updateFields["telegram_handle"] = dto.TelegramHandle
+	}
+	if dto.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		updateFields["password"] = string(hashedPassword)
+	}
+
+	update := bson.M{"$set": updateFields}
+
+	var updatedUser domain.UserDTO
+	err := repo.collection.FindOneAndUpdate(
+		context.TODO(),
+		filter,
+		update,
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updatedUser)
+
+	if err != nil {
+		return nil, err
+	}
+	return &updatedUser, nil
 }

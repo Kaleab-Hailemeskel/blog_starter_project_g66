@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -10,6 +12,7 @@ type IAuthService interface {
 	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
 	ValidateRefreshToken(tokenStr string) (string, error)
 	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
 }
 type IAuthRepo interface {
 	Save(token *RefreshToken) error
@@ -25,8 +28,8 @@ type IUserRepository interface { // eka was here
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
-	CreateSuperAdmin() error
 	UpdateRole(email, role string) error
+	UpdateUserByEmail(email string, dto *UpdateProfileDTO) (*UserDTO, error)
 	// DemoteUser(userEmail string) error
 	// PromoteUser(userEmail string) error
 	GetUserByID(userID string) (*UserDTO, error)
