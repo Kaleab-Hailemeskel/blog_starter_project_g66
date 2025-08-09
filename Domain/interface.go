@@ -50,6 +50,7 @@ type IUserOTP interface {
 type IEmailService interface {
 	Send(email string, token string) error
 	GenerateRandomOTP() string
+	SendResetLink(toEmail, subject, message string) error
 }
 type IBlogRepository interface {
 	IsClientConnected() bool // just for testing on the testify purpose
@@ -100,7 +101,7 @@ type IBlogUseCase interface {
 }
 
 type IPasswordUsecase interface {
-	GenerateResetToken(email string) (string, error)
+	GenerateResetToken(email string) error
 	ResetPassword(token, newPassword string) error
 }
 

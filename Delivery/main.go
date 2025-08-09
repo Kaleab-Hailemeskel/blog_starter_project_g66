@@ -46,7 +46,7 @@ func main() {
 	userController := controllers.NewUserUsecase(userUsecase,oauthUsecase)
 
 
-	passwordUsecase := usecases.NewPasswordUsecase(userRepo, jwtSecret)
+	passwordUsecase := usecases.NewPasswordUsecase(userRepo, emailService, jwtSecret)
 	passwordController := controllers.NewPasswordController(passwordUsecase)
 	
 

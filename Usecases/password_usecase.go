@@ -11,21 +11,23 @@ import (
 )
 
 type passwordUsecase struct {
-	userRepo  domain.IUserRepository
-	jwtSecret string
+	userRepo  		domain.IUserRepository
+	emailService	domain.IEmailService
+	jwtSecret 		string
 }
 
-func NewPasswordUsecase(repo domain.IUserRepository, jwtSec string) domain.IPasswordUsecase {
+func NewPasswordUsecase(repo domain.IUserRepository, emailser domain.IEmailService, jwtSec string) domain.IPasswordUsecase {
 	return &passwordUsecase{
 		userRepo:  repo,
+		emailService: emailser,
 		jwtSecret: jwtSec,
 	}
 }
 
-func (u *passwordUsecase) GenerateResetToken(email string) (string, error) {
+func (u *passwordUsecase) GenerateResetToken(email string) error {
 	user, err := u.userRepo.FindByEmail(email)
 	if err != nil {
-		return "", errors.New("user not found")
+		return errors.New("user not found")
 	}
 
 	claims := jwt.MapClaims{
@@ -38,11 +40,17 @@ func (u *passwordUsecase) GenerateResetToken(email string) (string, error) {
 	signedToken, err := token.SignedString([]byte(u.jwtSecret))
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	resetURL := fmt.Sprintf("http://localhost:3000/reset-password?token=%s", signedToken)
-	return resetURL, nil
+	subject := "Password Reset Request"
+	message := fmt.Sprintf("Click the link below to reset your password:\n\n%s\n\nThis link will expire in 15 minutes.", resetURL)
+	
+	if err := u.emailService.SendResetLink(user.Email, subject, message); err != nil {
+		return fmt.Errorf("failed to send reset email: %w", err)
+	}
+	return nil
 }
 
 func (u *passwordUsecase) ResetPassword(tokenStr, newPassword string) error {
