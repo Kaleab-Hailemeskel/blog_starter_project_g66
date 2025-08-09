@@ -4,7 +4,7 @@ import (
 	domain "blog_starter_project_g66/Domain"
 )
 
-func ChangeToDTOUserfunc(domainUser *domain.User) *domain.UserDTO {
+func ChangeToDTOUser(domainUser *domain.User) *domain.UserDTO {
 	return &domain.UserDTO{
 		UserName:       domainUser.UserName,
 		PersonalBio:    domainUser.PersonalBio,
