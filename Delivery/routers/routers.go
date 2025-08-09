@@ -39,7 +39,7 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	userRoutes.Use(auth.JWTAuthMiddleware())
 	{
 		userRoutes.POST("/logout",uc.HandleLogout)
-		userRoutes.PUT("/edit_profile", uc.UpdateProfile)
+		userRoutes.PUT("/profile", uc.UpdateProfile)
 	}
 	// router.POST("/blog/sreach",)
 	// router.POST("/ai",)
