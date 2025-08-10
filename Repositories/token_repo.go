@@ -2,6 +2,7 @@ package repositories
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"time"
 
@@ -15,9 +16,11 @@ type RefreshTokenRepository struct {
 }
 
 func NewRefreshTokenRepository(dbClient *MongoDBClient) *RefreshTokenRepository {
-	db := dbClient.Client.Database("user_db")
+	userDB := config.USER_DB
+
+	db := dbClient.Client.Database(userDB)
 	return &RefreshTokenRepository{
-		Collection: db.Collection("refresh_token"),
+		Collection: db.Collection(config.USER_REFRESH_TOKEN_COLLECTION_NAME),
 	}
 }
 
