@@ -28,8 +28,8 @@ type IUserRepository interface { // eka was here
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
-	CreateSuperAdmin() error
 	UpdateRole(email, role string) error
+	UpdateUserByEmail(email string, dto *UpdateProfileDTO) (*UserDTO, error)
 	// DemoteUser(userEmail string) error
 	// PromoteUser(userEmail string) error
 	GetUserByID(userID string) (*UserDTO, error)
@@ -50,8 +50,11 @@ type IUserOTP interface {
 type IEmailService interface {
 	Send(email string, token string) error
 	GenerateRandomOTP() string
+	SendResetLink(toEmail, subject, message string) error
 }
 type IBlogRepository interface {
+	IsClientConnected() bool // just for testing on the testify purpose
+	CreateBlog(blog *Blog, userID primitive.ObjectID) (*BlogDTO, error)
 	CreateBlog(blog *Blog, userID primitive.ObjectID) (*Blog, error)
 	FindBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
@@ -66,18 +69,21 @@ type IPopularityRepository interface {
 	CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
 	UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error // revert boolean helps to undo the like while disliking the blog
 	UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error
-	CreateBlogPopularity(blogID primitive.ObjectID) error
+	CreateBlogPopularity(blogID primitive.ObjectID) (*PopularityDTO, error)
+	UpdatePopularityValueByBlogID(blogID primitive.ObjectID, calculatedValue int) error
 	CommentBlogByID(blogID primitive.ObjectID, commentDTO *CommentDTO) error
 	IncreaseBlogViewByID(blogID primitive.ObjectID) error
+	BlogPostViewCountByID(blogID primitive.ObjectID) (int, error)
+	BlogPostPopularityValueByID(blogID primitive.ObjectID) (int, error)
 	BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostDisLikeCountByID(blogID primitive.ObjectID) (int, error)
 	BlogPostCommentCountByID(blogID primitive.ObjectID) (int, error)
-	GetPopularityBlogByID(popValue primitive.ObjectID) (*PopularityDTO, error)
+	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
 	CloseDataBase() error
 }
 
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) (*Blog, error) //! Instead of userEmail as string we can pass userID instantly
+	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) //! Instead of userEmail as string we can pass userID instantly
 	DeleteBlogByID(blogID string) error                     // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
@@ -87,10 +93,16 @@ type IBlogUseCase interface {
 	DisLikeBlog(blogID primitive.ObjectID, userEmail string) error
 	CommentBlog(userEmail string, comment *CommentDTO, blogID primitive.ObjectID) error
 	IncreaseView(blogID primitive.ObjectID) error
+
+	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
+	CalcualtePopularity(blog *PopularityDTO) int
+	CommentBlogByID(blogID primitive.ObjectID, commentDTO *Comment) error
+	
+	GetMainBlogAndPopularityBlogByID(blogID primitive.ObjectID) (*BlogDTO, *PopularityDTO, error)
 }
 
 type IPasswordUsecase interface {
-	GenerateResetToken(email string) (string, error)
+	GenerateResetToken(email string) error
 	ResetPassword(token, newPassword string) error
 }
 
