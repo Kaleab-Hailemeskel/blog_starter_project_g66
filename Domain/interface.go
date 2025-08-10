@@ -80,10 +80,21 @@ type IPopularityRepository interface {
 	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
 	CloseDataBase() error
 }
-
+type IUserUseCase interface {
+	HandleRegistration(user *User) error
+	SendOTP(user *User) error
+	VerifyOTP(email, otp string) (bool, error)
+	PromoteUser(actor, target string) error
+	DemoteUser(actor, target string) error
+	Login(email, password string) (*AuthTokens, error)
+	Refresh(oldRefreshToken string) (*AuthTokens, error)
+	Logout(refreshToken string) error
+	UpdateProfile(email string, dto *UpdateProfileDTO) (*UserDTO, error)
+	GetUserByEmail(email string) (*UserDTO, error)
+}
 type IBlogUseCase interface {
 	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) //! Instead of userEmail as string we can pass userID instantly
-	DeleteBlogByID(blogID string) error                     // the controller will pass the a string from the url the usecase will change it to the objectID
+	DeleteBlogByID(blogID string) error                        // the controller will pass the a string from the url the usecase will change it to the objectID
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	// page number needed for the purpose of pagination
@@ -96,7 +107,7 @@ type IBlogUseCase interface {
 	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
 	CalcualtePopularity(blog *PopularityDTO) int
 	CommentBlogByID(blogID primitive.ObjectID, commentDTO *Comment) error
-	
+
 	GetMainBlogAndPopularityBlogByID(blogID primitive.ObjectID) (*BlogDTO, *PopularityDTO, error)
 }
 
