@@ -112,12 +112,6 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	limit := int64(pageSize)
 
 	filter := bson.M{}
-	sort_by_filed := "last_update"
-	sort_by_value := -1
-	if url_filter.Popularity_value != 0 {
-		sort_by_filed = "popularity_value"
-		sort_by_value = url_filter.Popularity_value
-	}
 	if url_filter != nil {
 		if url_filter.Tag != "" {
 			// Use $regex for case-insensitive partial match on tags array
@@ -135,7 +129,7 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 
 	}
 
-	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: sort_by_filed, Value: sort_by_value}})
+	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update", Value: -1}})
 	log.Println("✅ filtering finished")
 
 	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
