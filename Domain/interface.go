@@ -131,3 +131,13 @@ type IPasswordUsecase interface {
 type IOAuthUsecase interface {
 	HandleOAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
 }
+
+type IAICommentUsecase interface {
+	AICommentUsecase(userReq *AICommentDTO, aIInteraction IAIInteraction) (string, error)
+}
+type IAIBlogUsecase interface {
+	AIBlogUsecase(userID string, userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
+}
+type IAIFilterUsecase interface {
+	AIFilterUsecase(userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
+}

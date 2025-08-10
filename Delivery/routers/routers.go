@@ -8,7 +8,7 @@ import (
 	
 )
 
-func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController, auth *infrastructure.AuthMiddleware) {
+func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController, auth *infrastructure.AuthMiddleware, ai *controllers.AIController) {
 	router := gin.Default()
 
 	router.POST("/login",uc.HandleLogin)
@@ -22,8 +22,7 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	blogRoutes.Use(auth.JWTAuthMiddleware())
 	{
 		blogRoutes.POST("", bc.CreateBlog)     
-		blogRoutes.GET("", bc.FilterBlog)         
-		blogRoutes.GET("/filter", bc.FilterBlog)   
+		blogRoutes.GET("", bc.FilterBlog)           
 		blogRoutes.PUT("/:id", bc.UpdateBlog)      
 		blogRoutes.DELETE("/:id", bc.DeleteBlog)   
 	}
@@ -41,9 +40,16 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 		userRoutes.POST("/logout",uc.HandleLogout)
 		userRoutes.PUT("/edit_profile", uc.UpdateProfile)
 	}
-	// router.POST("/blog/sreach",)
-	// router.POST("/ai",)
-	// router.POST("/ai/:id",)
+	
+	AIRoutes := router.Group("/ai")
+	AIRoutes.Use(auth.JWTAuthMiddleware())
+	{	
+		AIRoutes.GET("/comment",ai.HandleAIComment)
+		AIRoutes.GET("/:id",ai.HandleAIBog)
+		AIRoutes.GET("/filter",ai.HandleAIFilter)
+	}
+	
+
 
 	router.GET("/auth/:provider", uc.SignInWithProvider)
 	router.GET("/auth/:provider/callback", uc.CallbackHandler)

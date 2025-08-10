@@ -51,7 +51,11 @@ func main() {
 	passwordController := controllers.NewPasswordController(passwordUsecase)
 	blogController := controllers.NewController(blogUsecase, userUsecase)
 
+	aiCommentUsecase :=usecases.NewAIusecaseComment()
+	aiBlogUsecase := usecases.NewAIusecaseBLog(blogUsecase)
+	aiFliterUsecase := usecases.NewAIusecaseFilter()
+	aiController := controllers.NewAIController(aiCommentUsecase,aiBlogUsecase,aiFliterUsecase)
 	// Initialize Routers
-	routers.Router(userController, passwordController, blogController, authMiddleware)
+	routers.Router(userController, passwordController, blogController, authMiddleware, aiController)
 
 }
