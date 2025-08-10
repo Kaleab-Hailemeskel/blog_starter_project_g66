@@ -13,14 +13,15 @@ import (
 
 type BlogController struct {
 	BlogUseCase domain.IBlogUseCase
-	UserUseCase domain.IUserUserCase //! For the time being it is commented out
+	UserUseCase domain.IUserUseCase 
 }
 
 var queryStrings = []string{"tag", "author", "title", "popularity", "date", "p"}
 
-func NewController(blogUseCase domain.IBlogUseCase) *BlogController {
+func NewController(blogUseCase domain.IBlogUseCase, userUseCase domain.IUserUseCase) *BlogController {
 	return &BlogController{
 		BlogUseCase: blogUseCase,
+		UserUseCase: userUseCase,
 	}
 }
 
@@ -82,7 +83,8 @@ func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, gin.H{"result": domainBlogList})
 
 }
-//! user should be authorized with the modifcation before doing anyting
+
+// ! user should be authorized with the modifcation before doing anyting
 func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
 	blogIDString := ctx.Param("id")
 	emailVal, exists := ctx.Get("email")
@@ -112,6 +114,7 @@ func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
 	}
 	ctx.IndentedJSON(http.StatusAccepted, gin.H{"message": "Blog Deleted"})
 }
+
 //! user should be authorized with the modifcation before doing anyting
 
 func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
