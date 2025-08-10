@@ -13,7 +13,7 @@ import (
 
 type BlogController struct {
 	BlogUseCase domain.IBlogUseCase
-	// UserUseCase domain.IUserUseCase //! For the time being it is commented out
+	UserUseCase domain.IUserUserCase //! For the time being it is commented out
 }
 
 var queryStrings = []string{"tag", "author", "title", "popularity", "date", "p"}
@@ -25,28 +25,28 @@ func NewController(blogUseCase domain.IBlogUseCase) *BlogController {
 }
 
 func (cntrl *BlogController) CreateBlog(ctx *gin.Context) {
-    var blogDTO domain.BlogDTO
-    if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
-        ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid blog data", "details": err.Error()})
-        return
-    }
-    blog := conv.ChangeToDomainBlog(&blogDTO)
-    emailVal, exists := ctx.Get("email")
-    if !exists {
-        ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User email not found in context"})
-        return
-    }
-    ownerEmail, ok := emailVal.(string)
-    if !ok {
-        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
-        return
-    }
-    createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
-    if err != nil {
-        ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create blog", "details": err.Error()})
-        return
-    }
-    ctx.IndentedJSON(http.StatusCreated, gin.H{"message": "blog created", "blog": createdBlog})
+	var blogDTO domain.BlogDTO
+	if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid blog data", "details": err.Error()})
+		return
+	}
+	blog := conv.ChangeToDomainBlog(&blogDTO)
+	emailVal, exists := ctx.Get("email")
+	if !exists {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User email not found in context"})
+		return
+	}
+	ownerEmail, ok := emailVal.(string)
+	if !ok {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
+		return
+	}
+	createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create blog", "details": err.Error()})
+		return
+	}
+	ctx.IndentedJSON(http.StatusCreated, gin.H{"message": "blog created", "blog": createdBlog})
 }
 
 // filter blog can also be used to get all blogs.
@@ -62,7 +62,7 @@ func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 		AuthorName: mapQuery[queryStrings[1]],
 	}
 	res_int, res_err := strconv.Atoi(mapQuery[queryStrings[3]])
-	if res_err == nil{
+	if res_err == nil {
 		filter.Popularity_value = res_int
 	}
 	res, err := strconv.Atoi(mapQuery["p"])
@@ -82,25 +82,66 @@ func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, gin.H{"result": domainBlogList})
 
 }
+//! user should be authorized with the modifcation before doing anyting
 func (cntrl *BlogController) DeleteBlog(ctx *gin.Context) {
-	// blogObjID, err := primitive.ObjectIDFromHex(blogIDString)
 	blogIDString := ctx.Param("id")
+	emailVal, exists := ctx.Get("email")
 
-	err := cntrl.BlogUseCase.DeleteBlogByID(blogIDString)
+	blogIDStringObj, err := primitive.ObjectIDFromHex(blogIDString)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusNoContent, gin.H{"error": "blog ID isn't correct"})
+	}
+	if !exists {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
+	userDTO, _ := cntrl.UserUseCase.GetUserByEmail(emailVal.(string))
+	if userDTO == nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
+	blog, _ := cntrl.BlogUseCase.GetBlogByID(blogIDStringObj)
+	if blog.OwnerID != userDTO.UserID {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
+	err = cntrl.BlogUseCase.DeleteBlogByID(blogIDString)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
 	ctx.IndentedJSON(http.StatusAccepted, gin.H{"message": "Blog Deleted"})
 }
+//! user should be authorized with the modifcation before doing anyting
+
 func (cntrl *BlogController) UpdateBlog(ctx *gin.Context) {
 	blogStringID := ctx.Param("id")
+	emailVal, exists := ctx.Get("email")
+
+	blogIDStringObj, err := primitive.ObjectIDFromHex(blogStringID)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusNoContent, gin.H{"error": "blog ID isn't correct"})
+	}
+	if !exists {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
+	userDTO, _ := cntrl.UserUseCase.GetUserByEmail(emailVal.(string))
+	if userDTO == nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
+	blog, _ := cntrl.BlogUseCase.GetBlogByID(blogIDStringObj)
+	if blog.OwnerID != userDTO.UserID {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized User"})
+		return
+	}
 	var blogDTO domain.BlogDTO
 	if err := ctx.ShouldBindJSON(&blogDTO); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid Blog type"})
 		return
 	}
-	err := cntrl.BlogUseCase.UpdateBlogByID(blogStringID, conv.ChangeToDomainBlog(&blogDTO))
+	err = cntrl.BlogUseCase.UpdateBlogByID(blogStringID, conv.ChangeToDomainBlog(&blogDTO))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -188,4 +229,3 @@ func (cntrl *BlogController) CommentBlog(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Commented successfully"})
 }
-
