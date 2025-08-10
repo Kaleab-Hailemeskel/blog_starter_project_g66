@@ -3,6 +3,7 @@ package repositories
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"fmt"
 	"log"
@@ -15,13 +16,8 @@ import (
 )
 
 const (
-	mainBlogDbName           = "blogdb_test"
-	mainBlogDbCollName       = "blogCollection"
-	blogPopularityDbName     = "blogPop_test"
-	blogPopularityDbCollName = "blogPop_collection"
-	pageSize                 = 10
-	ASC                      = 1
-	DESC                     = -1
+	ASC  = 1
+	DESC = -1
 )
 
 type BlogDB struct {
@@ -32,7 +28,8 @@ type BlogDB struct {
 
 func NewBlogDataBaseService() domain.IBlogRepository {
 	connection, err := Connect()
-
+	mainBlogDbCollName := config.BLOG_COLLECTION_NAME
+	mainBlogDbName := config.BLOG_DB
 	if err != nil {
 		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
@@ -110,6 +107,7 @@ func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domai
 	return nil
 }
 func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
+	pageSize := config.BLOGS_PER_PAGE_INT
 	skip := int64((pageNumber - 1) * pageSize)
 	limit := int64(pageSize)
 
@@ -186,7 +184,8 @@ type PopularityDB struct {
 
 func NewBlogPopularityDataBaseService() domain.IPopularityRepository {
 	connection, err := Connect()
-
+	blogPopularityDbName := config.BLOG_POP_DB
+	blogPopularityDbCollName := config.BLOG_POP_COLLECTION_NAME
 	if err != nil {
 		log.Fatal("can't initailize ", blogPopularityDbName, " Database")
 	}
@@ -546,6 +545,7 @@ func (bldb *PopularityDB) GetPopularityBlogByID(blogID primitive.ObjectID) (*dom
 	return &popBlog, nil
 }
 func (bldb *PopularityDB) GetPopularityByFilter(order int, pageNumber int) ([]*domain.PopularityDTO, error) {
+	pageSize := config.BLOGS_PER_PAGE_INT
 	skip := int64((pageNumber - 1) * pageSize)
 	limit := int64(pageSize)
 	if !(order == ASC || order == DESC) {

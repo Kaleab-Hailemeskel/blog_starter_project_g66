@@ -2,10 +2,11 @@ package infrastructure
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+	"log"
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
@@ -53,10 +54,10 @@ type AIBlogFilterInteraction struct { //? UseCase: if the user doesn't know anyt
 
 func CreateNewAIInteraction(clientID primitive.ObjectID) *AI_Interaction {
 	ctx := context.Background()
-	apiKey := os.Getenv("GEMINI_API_KEY")
+	apiKey := config.GEMINI_API_KEY
 	if apiKey == "" {
-		//! REMEMBER to switch back to environment variables for production.
-		apiKey = "AIzaSyAsU5HGko_VqY1ZBcEak5UYK_I0c1W2dL4"
+		log.Println("❌ cannot initialize AI interaction empty API key")
+		return nil
 	}
 	// if the user interacts today it's countInteraction and
 	// the timestamps should be loaded from the database

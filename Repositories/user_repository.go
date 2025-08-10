@@ -3,6 +3,7 @@ package repositories
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"errors"
 	"log"
@@ -22,14 +23,11 @@ type UserRepository struct {
 	Client     *mongo.Client
 }
 
-const (
-	UserDataBaseName   = "user_db_test"
-	UserCollectionName = "users"
-)
-
 func NewUserRepository() *UserRepository {
 	connection, err := Connect()
-
+	mainBlogDbName := config.BLOG_DB
+	UserDataBaseName := config.USER_DB
+	UserCollectionName := config.USER_COLLECTION_NAME
 	if err != nil {
 		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
