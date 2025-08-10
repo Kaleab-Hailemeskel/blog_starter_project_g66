@@ -15,8 +15,6 @@ type MongoDBClient struct {
 }
 
 func Connect() (*MongoDBClient, error) {
-	config.InitEnv()
-
 	mongoURI := config.MONGO_CONNECTION_STRING
 	clientOptions := options.Client().ApplyURI(mongoURI)
 

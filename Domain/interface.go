@@ -107,8 +107,8 @@ type IUserUseCase interface {
 	GetUserByEmail(email string) (*UserDTO, error)
 }
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) //! Instead of userEmail as string we can pass userID instantly
-	DeleteBlogByID(blogID string) error                        // the controller will pass the a string from the url the usecase will change it to the objectID
+	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) 
+	DeleteBlogByID(blogID string) error                       
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	// page number needed for the purpose of pagination

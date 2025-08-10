@@ -18,8 +18,6 @@ const (
 )
 
 func InitOAuth() {
-	config.InitEnv()
-
 	clientID := config.CLIENT_ID
 	clientSecret := config.CLIENT_SECRET
 	clientCallbackURL := config.CLIENT_CALLBACK_URL
