@@ -17,23 +17,22 @@ func NewPasswordController(uc domain.IPasswordUsecase) *PasswordController {
 
 func (pc *PasswordController) ForgotPassword(c *gin.Context) {
 	var req struct {
-		Email string `json:"email"`
+		Email string `json:"email" binding:"required,email"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	resetURL, err := pc.passwordUc.GenerateResetToken(req.Email)
+	err := pc.passwordUc.GenerateResetToken(req.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "Password reset link generated",
-		"reset_url": resetURL,
+		"message":   "Password reset link sent",
 	})
 }
 
@@ -45,7 +44,7 @@ func (pc *PasswordController) ResetPassword(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

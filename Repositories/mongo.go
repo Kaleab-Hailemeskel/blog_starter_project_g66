@@ -1,12 +1,11 @@
 package repositories
 
 import (
+	"blog_starter_project_g66/config"
 	"context"
 	"log"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -16,12 +15,9 @@ type MongoDBClient struct {
 }
 
 func Connect() (*MongoDBClient, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	config.InitEnv()
 
-	mongoURI := os.Getenv("MONGO_CONNECTION_STRING")
+	mongoURI := config.MONGO_CONNECTION_STRING
 	clientOptions := options.Client().ApplyURI(mongoURI)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)

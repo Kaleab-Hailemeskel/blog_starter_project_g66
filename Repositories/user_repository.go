@@ -3,6 +3,7 @@ package repositories
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"errors"
 	"log"
@@ -22,14 +23,11 @@ type UserRepository struct {
 	Client     *mongo.Client
 }
 
-const (
-	UserDataBaseName   = "user_db_test"
-	UserCollectionName = "users"
-)
-
 func NewUserRepository() *UserRepository {
 	connection, err := Connect()
-
+	mainBlogDbName := config.BLOG_DB
+	UserDataBaseName := config.USER_DB
+	UserCollectionName := config.USER_COLLECTION_NAME
 	if err != nil {
 		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
@@ -96,26 +94,6 @@ func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	update := bson.M{"$set": bson.M{"password": hashedPassword}}
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	return err
-}
-
-func (r *UserRepository) CreateSuperAdmin() error {
-
-	email := "superadmin@gmail.com"
-	username := "superadmin"
-	password := "123456789ADm@"
-
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := bson.M{
-		"username": username,
-		"email":    email,
-		"password": string(hashedPassword),
-		"role":     "SUPER_ADMIN",
-	}
-	_, err := r.collection.InsertOne(r.Contxt, user)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *UserRepository) UpdateRole(email, role string) error {
