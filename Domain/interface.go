@@ -55,6 +55,7 @@ type IEmailService interface {
 type IBlogRepository interface {
 	IsClientConnected() bool // just for testing on the testify purpose
 	CreateBlog(blog *Blog, userID primitive.ObjectID) (*BlogDTO, error)
+	CreateBlog(blog *Blog, userID primitive.ObjectID) (*Blog, error)
 	FindBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
 	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
@@ -112,4 +113,14 @@ type IAIInteraction interface {
 	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
 	IncrementInteractionCount()
 	CloseAIConnection() error
+}
+
+type IAICommentUsecase interface {
+	AICommentUsecase(userReq *AICommentDTO, aIInteraction IAIInteraction) (string, error)
+}
+type IAIBlogUsecase interface {
+	AIBlogUsecase(userID string, userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
+}
+type IAIFilterUsecase interface {
+	AIFilterUsecase(userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
 }
