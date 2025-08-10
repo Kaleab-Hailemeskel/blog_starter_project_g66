@@ -9,8 +9,6 @@ import (
 	usecases "blog_starter_project_g66/Usecases"
 	"blog_starter_project_g66/config"
 	"log"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -20,11 +18,6 @@ func main() {
 		log.Fatal("❌Failed to connect:", err)
 	}
 	defer mongoClient.Disconnect()
-
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	from := config.FROM
 	appPass := config.APPPASS
@@ -52,7 +45,7 @@ func main() {
 	blogRepo := repositories.NewBlogDataBaseService()
 	popularityRepo := repositories.NewBlogPopularityDataBaseService()
 	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
-	blogController := controllers.NewController(blogUsecase)
+	blogController := controllers.NewController(blogUsecase, userUsecase)
 
 	routers.Router(userController, passwordController, blogController, authMiddleware)
 
