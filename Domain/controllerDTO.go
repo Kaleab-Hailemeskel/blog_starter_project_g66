@@ -71,3 +71,16 @@ type UpdateProfileDTO struct {
 	TelegramHandle string             `json:"telegram_handle" bson:"telegram_handle"`
 	Password       string             `json:"password" bson:"password"` // securely hashed
 }
+
+type AICommentDTO struct{
+	UserMessage string `json:"usermessage" bson:"usermessage"`
+	Comment string	`json:"comment" bson:"comment"`
+}
+
+type AIBlogDTO struct{
+	UserMessage string `json:"usermessage" bson:"usermessage"`
+}
+
+// type AIBlogGenerationDTO struct{
+// 	UserMessage string `json:"usermessage" bson:"usermessage"`
+// }

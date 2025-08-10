@@ -95,13 +95,17 @@ func (aint *AI_Interaction) IsClientConnected() bool {
 func (aint *AI_Interaction) GenerateContent(prompt string) (*domain.AIResponse, error) {
 	aint.IncrementInteractionCount() // increament the interaction for observation
 	resp, err := aint.Model.GenerateContent(aint.Ctx, genai.Text(prompt))
+	log.Println("😜while gemini working on it")
+	log.Println(resp)
+	log.Println(err)
+	log.Println("-------------")
 	if err != nil {
 		return nil, err
 	}
 
 	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
 		respText := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
-
+		log.Println("✔ ", respText)
 		var aiResponse domain.AIResponse
 		if err := json.Unmarshal([]byte(respText), &aiResponse); err != nil {
 
@@ -116,19 +120,19 @@ func (commInt *AICommentInteraction) ParseJsonBodyToDomain(aiResponse *domain.AI
 	return aiResponse.MainResponse
 }
 func (commInt *AICommentInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-	overAllPrompt := userMessage + `
+  overAllPrompt := userMessage + `
 pharaphrase the following without leaving the context, and feeling. ` + developerMessage + `
 correct: the grammar sentense structure and casing
 Generate a response that is a plain string. Do not use any special formatting or code block delimiters.
 {
-	"main_response": // this contain the strring after pahraphrasing
-	"editorial_response": // this should contain the editorial message from the ai response
-	"is_nil_response": // this should contain a boolean value weather the main_response is null or not
+  "main_response": // this contain the strring after pahraphrasing
+  "editorial_response": // this should contain the editorial message from the ai response
+  "is_nil_response": // this should contain a boolean value weather the main_response is null or not
 }
-	 Here is the pharagraph:
+   Here is the pharagraph:
 ` + jsonBodyStirng
 
-	return commInt.GenerateContent(overAllPrompt)
+  return commInt.GenerateContent(overAllPrompt)
 }
 
 func (blgInt *AIBlogInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
@@ -142,7 +146,7 @@ func (blgInt *AIBlogInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResp
 	return &generatedBlog
 }
 func (blgInt *AIBlogInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-	overAllPrompt := developerMessage + userMessage + `
+  overAllPrompt := developerMessage + userMessage + `
         .The json format for the blog looks like the following:
     ` + jsonBodyStirng + `
 
@@ -159,7 +163,7 @@ func (blgInt *AIBlogInteraction) CallAIAndGetResponse(developerMessage string, u
             "is_nil_response": // this should contain a boolean value weather the main_response is null or not
     }
     `
-	return blgInt.GenerateContent(overAllPrompt)
+  return blgInt.GenerateContent(overAllPrompt)
 }
 func (blgFilter *AIBlogFilterInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
 	var generatedFilter domain.AIBlogFilter
@@ -170,7 +174,7 @@ func (blgFilter *AIBlogFilterInteraction) ParseJsonBodyToDomain(aiResponse *doma
 	return &generatedFilter
 }
 func (blgFilter *AIBlogFilterInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-	overAllPrompt := developerMessage + jsonBodyStirng + "Today is: " + time.Now().Format("2006-01-02") + `
+  overAllPrompt := developerMessage + jsonBodyStirng + "Today is: " + time.Now().Format("2006-01-02") + `
     Create a filter using the information provided by the following prompt:
 ` + userMessage + `
     .Generate a response that is a plain string. Do not use any special formatting or code block delimiters. The json filter structure looks like this:
@@ -188,5 +192,5 @@ func (blgFilter *AIBlogFilterInteraction) CallAIAndGetResponse(developerMessage 
             }
     Keep in mind that if the prompt didn't mention any of the fields, use an empty string or null value as needed when returning the result.`
 
-	return blgFilter.GenerateContent(overAllPrompt)
+  return blgFilter.GenerateContent(overAllPrompt)
 }

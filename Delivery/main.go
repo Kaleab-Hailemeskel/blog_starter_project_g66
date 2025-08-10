@@ -54,6 +54,10 @@ func main() {
 	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
 	blogController := controllers.NewController(blogUsecase)
 
-	routers.Router(userController, passwordController, blogController, authMiddleware)
+	aiCommentUsecase :=usecases.NewAIusecaseComment()
+	aiBlogUsecase := usecases.NewAIusecaseBLog(blogUsecase)
+	aiFliterUsecase := usecases.NewAIusecaseFilter()
+	aiController := controllers.NewAIController(aiCommentUsecase,aiBlogUsecase,aiFliterUsecase)
+	routers.Router(userController, passwordController, blogController, authMiddleware, aiController)
 
 }
