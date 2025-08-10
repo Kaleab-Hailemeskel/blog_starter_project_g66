@@ -17,3 +17,4 @@ type AIBlogFilter struct {
 	Title      string     `json:"title" bson:"title"`
 	AuthorName string     `json:"author_name" bson:"author_name"`
 }
+

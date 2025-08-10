@@ -60,3 +60,16 @@ type CommentDTO struct {
 	UserName string             `json:"user_name" bson:"user_name"`
 	Comment  string             `json:"comment" bson:"comment"`
 }
+
+type AICommentDTO struct{
+	UserMessage string `json:"usermessage" bson:"usermessage"`
+	Comment string	`json:"comment" bson:"comment"`
+}
+
+type AIBlogDTO struct{
+	UserMessage string `json:"usermessage" bson:"usermessage"`
+}
+
+// type AIBlogGenerationDTO struct{
+// 	UserMessage string `json:"usermessage" bson:"usermessage"`
+// }
