@@ -7,52 +7,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type IAuthService interface {
-	GenerateTokens(user *UserDTO) (string, string, error)
-	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
-	ValidateRefreshToken(tokenStr string) (string, error)
-	ValidateToken(tokenStr string) (jwt.MapClaims, error)
-	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
-}
-type IAuthRepo interface {
-	Save(token *RefreshToken) error
-	GetByToken(token string) (*RefreshToken, error)
-	Delete(token string) error
-}
-
-type IUserRepository interface { // eka was here
+// DATABASE Repositorys
+type IUserRepository interface {
+	// eka was here
 	Create(user *User) error
-
-	// UpdatePassword(userEmail string, updatedPassword string) error
-	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
 	UpdateRole(email, role string) error
 	UpdateUserByEmail(email string, dto *UpdateProfileDTO) (*UserDTO, error)
-	// DemoteUser(userEmail string) error
-	// PromoteUser(userEmail string) error
 	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
 }
-type IOAuthUsecase interface{
-	HandleOAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
+type IAuthRepo interface {
+	Save(token *RefreshToken) error
+	GetByToken(token string) (*RefreshToken, error)
+	Delete(token string) error
+	CloseDataBase() error
 }
-type IUserValidation interface {
-	IsValidEmail(email string) bool
-	IsStrongPassword(password string) bool
-	Hashpassword(password string) string
-	ComparePassword(userPassword, password string) error
-}
-type IUserOTP interface {
+type IUserOTPRepository interface {
 	StoreOTP(entry UserUnverified) error
 	FindOTP(email string) (*UserUnverified, error)
 	DeleteOTP(email string) error
-}
-type IEmailService interface {
-	Send(email string, token string) error
-	GenerateRandomOTP() string
-	SendResetLink(toEmail, subject, message string) error
+	CloseDataBase() error
 }
 type IBlogRepository interface {
 	IsClientConnected() bool // just for testing on the testify purpose
@@ -82,6 +59,41 @@ type IPopularityRepository interface {
 	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
 	CloseDataBase() error
 }
+
+// SERVICE implementation
+type IAuthService interface {
+	GenerateTokens(user *UserDTO) (string, string, error)
+	ValidateRefreshToken(tokenStr string) (string, error)
+	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
+}
+type IUserValidation interface {
+	IsValidEmail(email string) bool
+	IsStrongPassword(password string) bool
+	Hashpassword(password string) string
+	ComparePassword(userPassword, password string) error
+}
+type IUserOTP interface {
+	StoreOTP(entry UserUnverified) error
+	FindOTP(email string) (*UserUnverified, error)
+	DeleteOTP(email string) error
+}
+type IEmailService interface {
+	Send(email string, token string) error
+	GenerateRandomOTP() string
+	SendResetLink(toEmail, subject, message string) error
+}
+
+type IAIInteraction interface {
+	IsClientConnected() bool
+	GenerateContent(prompt string) (*AIResponse, error)
+	ParseJsonBodyToDomain(aiResponse *AIResponse) any
+	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
+	IncrementInteractionCount()
+	CloseAIConnection() error
+}
+
+// USECASE declarations
 type IUserUseCase interface {
 	HandleRegistration(user *User) error
 	SendOTP(user *User) error
@@ -112,17 +124,10 @@ type IBlogUseCase interface {
 
 	GetMainBlogAndPopularityBlogByID(blogID primitive.ObjectID) (*BlogDTO, *PopularityDTO, error)
 }
-
 type IPasswordUsecase interface {
 	GenerateResetToken(email string) error
 	ResetPassword(token, newPassword string) error
 }
-
-type IAIInteraction interface {
-	IsClientConnected() bool
-	GenerateContent(prompt string) (*AIResponse, error)
-	ParseJsonBodyToDomain(aiResponse *AIResponse) any
-	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
-	IncrementInteractionCount()
-	CloseAIConnection() error
+type IOAuthUsecase interface {
+	HandleOAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
 }
