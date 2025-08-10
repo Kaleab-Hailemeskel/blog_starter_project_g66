@@ -23,9 +23,13 @@ var (
 
 	BLOGS_PER_PAGE     string
 	BLOGS_PER_PAGE_INT int
-	
-	JWTSECRET string
-	CURR_USER string
+
+	USER_OTP_COLLECTION_NAME           string
+	USER_REFRESH_TOKEN_COLLECTION_NAME string
+
+	JWTSECRET        string
+	JWTREFRESHSECRET string
+	CURR_USER        string
 
 	FROM       string
 	APPPASS    string
@@ -40,7 +44,7 @@ var (
 
 func InitEnv() {
 	err := godotenv.Load()
-	if err != nil{
+	if err != nil {
 		log.Fatal("can not load .env file")
 	}
 	MONGO_CONNECTION_STRING = getEnv("MONGO_CONNECTION_STRING")
@@ -62,7 +66,9 @@ func InitEnv() {
 	CLIENT_ID = getEnv("CLIENT_ID")
 	CLIENT_SECRET = getEnv("CLIENT_SECRET")
 	CLIENT_CALLBACK_URL = getEnv("CLIENT_CALLBACK_URL")
-
+	USER_OTP_COLLECTION_NAME = getEnv("USER_OTP_COLLECTION_NAME")
+	USER_REFRESH_TOKEN_COLLECTION_NAME = getEnv("USER_REFRESH_TOKEN_COLLECTION_NAME")
+	JWTREFRESHSECRET = getEnv("JWTREFRESHSECRET")
 	BLOGS_PER_PAGE_INT = 5
 	res, err := strconv.Atoi(BLOGS_PER_PAGE)
 	if err == nil {

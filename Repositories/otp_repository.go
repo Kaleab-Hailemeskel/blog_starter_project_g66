@@ -2,6 +2,7 @@ package repositories
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,9 +15,10 @@ type UserOTPRepository struct {
 }
 
 func NewUserOTPRepository(dbClient *MongoDBClient) *UserOTPRepository {
-	db := dbClient.Client.Database("user_db")
+	userDB := config.USER_DB
+	db := dbClient.Client.Database(userDB)
 	return &UserOTPRepository{
-		collection: db.Collection("usersOTP"),
+		collection: db.Collection(config.USER_OTP_COLLECTION_NAME),
 	}
 }
 
