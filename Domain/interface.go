@@ -35,7 +35,9 @@ type IUserRepository interface { // eka was here
 	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
 }
-
+type IOAuthUsecase interface{
+	HandleOAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
+}
 type IUserValidation interface {
 	IsValidEmail(email string) bool
 	IsStrongPassword(password string) bool
