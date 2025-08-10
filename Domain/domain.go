@@ -62,7 +62,7 @@ type Comment struct {
 
 // I added the filter struct, b/c while filtering I was passing around 4 parameters at once so now 5 of them are in one struct it will be easy to pass arguments
 type Filter struct {
-	Popularity_value int
+	Popularity_value int // it should be either ascending or descending
 	Tag              string
 	AfterDate        *time.Time
 	AuthorName       string
