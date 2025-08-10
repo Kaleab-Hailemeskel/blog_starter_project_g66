@@ -61,6 +61,10 @@ func (cntrl *BlogController) FilterBlog(ctx *gin.Context) {
 		Title:      mapQuery[queryStrings[2]],
 		AuthorName: mapQuery[queryStrings[1]],
 	}
+	res_int, res_err := strconv.Atoi(mapQuery[queryStrings[3]])
+	if res_err == nil{
+		filter.Popularity_value = res_int
+	}
 	res, err := strconv.Atoi(mapQuery["p"])
 	if err != nil {
 		res = 1
