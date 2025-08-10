@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"blog_starter_project_g66/Delivery/converter"
-	"blog_starter_project_g66/Domain"
-	"blog_starter_project_g66/Usecases"
+	conv "blog_starter_project_g66/Delivery/converter"
+	domain "blog_starter_project_g66/Domain"
 	"fmt"
 	"net/http"
 
@@ -12,17 +11,17 @@ import (
 )
 
 type UserController struct {
-	UserUsecase *usecases.UserUsecase
-	OauthUsecase *usecases.OAuthUsecase
+	UserUsecase  domain.IUserUseCase
+	OauthUsecase domain.IOAuthUsecase
 }
 
 type PromoteDemoteRequest struct {
 	TargetEmail string `json:"target_email" binding:"required,email"`
 }
 
-func NewUserUsecase(uuc *usecases.UserUsecase,oat *usecases.OAuthUsecase) *UserController {
+func NewUserUsecase(uuc domain.IUserUseCase, oat domain.IOAuthUsecase) *UserController {
 	return &UserController{
-		UserUsecase: uuc,
+		UserUsecase:  uuc,
 		OauthUsecase: oat,
 	}
 }
@@ -40,6 +39,7 @@ func (uc *UserController) Registration(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
+	
 	err := uc.UserUsecase.HandleRegistration(conv.ChangeToDomainUser(user))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -84,7 +84,7 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "User verified successfully"})
 }
 
-func (uc *UserController)HandleLogin(ctx *gin.Context){
+func (uc *UserController) HandleLogin(ctx *gin.Context) {
 
 	var user *domain.UserDTO
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -143,57 +143,57 @@ func (h *UserController) HandleLogout(c *gin.Context) {
 
 func (uc *UserController) PromoteUser(ctx *gin.Context) {
 	var req PromoteDemoteRequest
-	 if err := ctx.ShouldBindJSON(&req); err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-    actingEmail, exists := ctx.Get("email")
-    if !exists {
-        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-        return
-    }
-    err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
-    if err != nil {
-        ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-        return
-    }
-    ctx.JSON(http.StatusOK, gin.H{"message": "User promoted to ADMIN successfully"})
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	actingEmail, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "User promoted to ADMIN successfully"})
 }
 
 func (uc *UserController) DemoteUser(ctx *gin.Context) {
 	var req PromoteDemoteRequest
-	 if err := ctx.ShouldBindJSON(&req); err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    actingEmail, exists := ctx.Get("email")
-    if !exists {
-        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-        return
-    }
+	actingEmail, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
-    err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
-    if err != nil {
-        ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-        return
-    }
+	err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
 
-    ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Admin demoted to user successfully"})
 }
 
-func (uc *UserController)SignInWithProvider(c *gin.Context) {
+func (uc *UserController) SignInWithProvider(c *gin.Context) {
 
 	provider := c.Param("provider")
 	q := c.Request.URL.Query()
 	q.Add("provider", provider)
 	c.Request.URL.RawQuery = q.Encode()
 	// req := c.Request
-    // req = req.WithContext(context.WithValue(req.Context(), "provider", provider))
+	// req = req.WithContext(context.WithValue(req.Context(), "provider", provider))
 	gothic.BeginAuthHandler(c.Writer, c.Request)
 }
 
-func (uc *UserController)CallbackHandler(c *gin.Context) {
+func (uc *UserController) CallbackHandler(c *gin.Context) {
 
 	provider := c.Param("provider")
 	q := c.Request.URL.Query()
@@ -204,10 +204,10 @@ func (uc *UserController)CallbackHandler(c *gin.Context) {
 	// req = req.WithContext(context.WithValue(c.Request.Context(), "provider", provider))
 
 	user, err := uc.OauthUsecase.HandleOAuthLogin(c.Request, c.Writer)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			return
-		}
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 	//   _, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 	// if err != nil {
 	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -225,7 +225,7 @@ func (uc *UserController)CallbackHandler(c *gin.Context) {
 
 	c.Redirect(http.StatusTemporaryRedirect, "/success")
 }
-func (uc *UserController)Success(c *gin.Context) {
+func (uc *UserController) Success(c *gin.Context) {
 
 	c.Data(http.StatusOK, "text/html; charset=utf-8", fmt.Appendf(nil, `
       <div style="
