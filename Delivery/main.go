@@ -27,26 +27,31 @@ func main() {
 	jwtSecret := config.JWTSECRET
 
 	oauth.InitOAuth()
-
-	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
+	// Initialize DataBase Repository
+	userRepo := repositories.NewUserRepository()
+	blogRepo := repositories.NewBlogDataBaseService()
+	popularityRepo := repositories.NewBlogPopularityDataBaseService()
+	authRepo := repositories.NewRefreshTokenRepository()
+	otpService := repositories.NewUserOTPRepository()
+	
+	// Initialize Services
+	passwaordService := infrastructure.NewPasswordService()
 	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
 	authService := infrastructure.NewJWTService(authRepo)
 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
-	userRepo := repositories.NewUserRepository()
+	
+	// Initialize UseCases
 	oauthUsecase := usecases.NewOAuthUsecase(userRepo, authService)
-	otpService := repositories.NewUserOTPRepository(mongoClient)
-	passwaordService := infrastructure.NewPasswordService()
 	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService, authService, authRepo)
-	userController := controllers.NewUserUsecase(userUsecase, oauthUsecase)
-
-	passwordUsecase := usecases.NewPasswordUsecase(userRepo, emailService, jwtSecret)
-	passwordController := controllers.NewPasswordController(passwordUsecase)
-
-	blogRepo := repositories.NewBlogDataBaseService()
-	popularityRepo := repositories.NewBlogPopularityDataBaseService()
 	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
+	passwordUsecase := usecases.NewPasswordUsecase(userRepo, emailService, jwtSecret)
+
+	// Initialize DataBase Repository
+	userController := controllers.NewUserUsecase(userUsecase, oauthUsecase)
+	passwordController := controllers.NewPasswordController(passwordUsecase)
 	blogController := controllers.NewController(blogUsecase, userUsecase)
 
+	// Initialize Routers
 	routers.Router(userController, passwordController, blogController, authMiddleware)
 
 }
