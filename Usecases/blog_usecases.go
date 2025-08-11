@@ -5,6 +5,7 @@ import (
 	domain "blog_starter_project_g66/Domain"
 	repositories "blog_starter_project_g66/Repositories"
 	"fmt"
+	"log"
 	"sort"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -60,6 +61,8 @@ func (bluc *BlogUseCase) CreateBlog(blog *domain.Blog, ownerEmail string) (*doma
 		return nil, err
 	}
 	userID := user.UserID
+	blog.Author = user.UserName
+
 	createdBlog, err := bluc.BlogDataBase.CreateBlog(blog, userID)
 	_, poplarityError := bluc.PopularityDataBase.CreateBlogPopularity(createdBlog.BlogID)
 	if err == nil && poplarityError != nil {
@@ -72,6 +75,10 @@ func (bluc *BlogUseCase) DeleteBlogByID(blogID string) error {
 	if err != nil {
 		return err
 	}
+	err = bluc.PopularityDataBase.DeletePopularityBlogByID(blogObjID)
+	if err != nil {
+		return err
+	}
 	return bluc.BlogDataBase.DeleteBlogByID(blogObjID)
 }
 func (bluc *BlogUseCase) UpdateBlogByID(blogID string, updatedBlog *domain.Blog) error {
@@ -80,6 +87,42 @@ func (bluc *BlogUseCase) UpdateBlogByID(blogID string, updatedBlog *domain.Blog)
 		return err
 	}
 	return bluc.BlogDataBase.UpdateBlogByID(blogObjID, updatedBlog)
+}
+func (bluc *BlogUseCase) GetMainBlogByAIFitlter(aiFilter *domain.AIBlogFilter) ([]*domain.BlogDTO, error) {
+	log.Println("✅ AI filtering 1")
+
+	if aiFilter == nil {
+		return nil, fmt.Errorf("nil AI filter")
+	}
+	log.Println("✅ AI filtering")
+	finalRes := []*domain.BlogDTO{}
+	if aiFilter.Tags != nil && len(aiFilter.Tags) > 0 {
+		for _, each_tag := range aiFilter.Tags {
+			resList, _ := bluc.GetAllBlogsByFilter(
+				&domain.Filter{
+					Tag:        each_tag,
+					AfterDate:  aiFilter.AfterDate,
+					Title:      aiFilter.Title,
+					AuthorName: aiFilter.AuthorName,
+				}, 1)
+			log.Println("Eachtime", resList)
+			if resList != nil {
+				finalRes = append(finalRes, resList...)
+			}
+		}
+	} else {
+		w := &domain.Filter{
+			Tag:        "",
+			AfterDate:  aiFilter.AfterDate,
+			Title:      aiFilter.Title,
+			AuthorName: aiFilter.AuthorName,
+		}
+		log.Println("what we send to db", w)
+		return bluc.GetAllBlogsByFilter(w, 1)
+
+	}
+	log.Println("sending ai blog response ✅")
+	return finalRes, nil
 }
 func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
 	if url_filter == nil {
@@ -104,9 +147,9 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 					})
 				}
 			}
-			if url_filter.Popularity_value == repositories.ASC{ // if the filter of pop_value was marked as ASC it should be sorted ascending Else it will be descending
+			if url_filter.Popularity_value == repositories.ASC { // if the filter of pop_value was marked as ASC it should be sorted ascending Else it will be descending
 				sort.Sort(domain.ByPopularityValue(blogWithPopValue))
-			}else{
+			} else {
 				sort.Sort(domain.ByPopularityValueDesc(blogWithPopValue))
 			}
 			newRes := []*domain.BlogDTO{}

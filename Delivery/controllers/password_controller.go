@@ -1,7 +1,8 @@
 package controllers
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
+	infrastructure "blog_starter_project_g66/Infrastructure"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,10 +10,14 @@ import (
 
 type PasswordController struct {
 	passwordUc domain.IPasswordUsecase
+	validate   *infrastructure.PasswordService
 }
 
-func NewPasswordController(uc domain.IPasswordUsecase) *PasswordController {
-	return &PasswordController{passwordUc: uc}
+func NewPasswordController(uc domain.IPasswordUsecase, validate_ *infrastructure.PasswordService) *PasswordController {
+	return &PasswordController{
+		passwordUc: uc,
+		validate:   validate_,
+	}
 }
 
 func (pc *PasswordController) ForgotPassword(c *gin.Context) {
@@ -32,19 +37,22 @@ func (pc *PasswordController) ForgotPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "Password reset link sent",
+		"message": "Password reset link sent",
 	})
 }
 
-
 func (pc *PasswordController) ResetPassword(c *gin.Context) {
 	var req struct {
-		Token 		string `json:"token"`
-		NewPassword	string	`json:"new_password"`
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if !pc.validate.IsStrongPassword(req.NewPassword) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "weak password choosen, please make your password stronger"})
 		return
 	}
 
@@ -54,4 +62,4 @@ func (pc *PasswordController) ResetPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully"})
-} 
+}

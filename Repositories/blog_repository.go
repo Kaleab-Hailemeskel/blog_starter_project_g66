@@ -89,11 +89,11 @@ func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domai
 	// Create an update document using $set to update specific fields.
 	updateDoc := bson.M{
 		"$set": bson.M{
-			"title":       updatedBlog.Title,
-			"tags":        updatedBlog.Tags,
-			"author":      updatedBlog.Author,
-			"description": updatedBlog.Description,
-			"last_update": time.Now(), // Update timestamp on every update
+			"title":            updatedBlog.Title,
+			"tags":             updatedBlog.Tags,
+			"author":           updatedBlog.Author,
+			"description":      updatedBlog.Description,
+			"last_update_time": time.Now(), // Update timestamp on every update
 		},
 	}
 
@@ -124,12 +124,12 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 			filter["title"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Title, Options: "i"}}
 		}
 		if url_filter.AfterDate != nil && !url_filter.AfterDate.IsZero() {
-			filter["last_update"] = bson.M{"$gte": url_filter.AfterDate}
+			filter["last_update_time"] = bson.M{"$gte": url_filter.AfterDate}
 		}
 
 	}
-
-	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update", Value: -1}})
+	log.Println(" 👈 ", filter)
+	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update_time", Value: -1}})
 	log.Println("✅ filtering finished")
 
 	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
@@ -222,6 +222,13 @@ func (bldb *PopularityDB) CheckUserDisLikeBlogID(blogID primitive.ObjectID, user
 	}
 	return true
 }
+
+func (bldb *PopularityDB) DeletePopularityBlogByID(blogID primitive.ObjectID) error {
+	filter := bson.M{"blog_id": blogID}
+	_, err := bldb.Coll.DeleteOne(bldb.Contxt, filter)
+	return err
+}
+
 func (bldb *PopularityDB) UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error {
 	// Filter to find the document
 	likeFilter := bson.M{"blog_id": blogID}

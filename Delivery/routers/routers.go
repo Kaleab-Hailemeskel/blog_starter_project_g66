@@ -46,6 +46,7 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	{	
 		AIRoutes.GET("/comment",ai.HandleAIComment)
 		AIRoutes.GET("/:id",ai.HandleAIBog)
+		AIRoutes.GET("/my_blog",ai.HandleAIBogModFromUser)
 		AIRoutes.GET("/filter",ai.HandleAIFilter)
 	}
 	

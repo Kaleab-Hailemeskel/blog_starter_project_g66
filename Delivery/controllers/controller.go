@@ -173,7 +173,7 @@ func (uc *UserController) DemoteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := uc.UserUsecase.PromoteUser(actingEmail.(string), req.TargetEmail)
+	err := uc.UserUsecase.DemoteUser(actingEmail.(string), req.TargetEmail)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return

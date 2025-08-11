@@ -33,7 +33,6 @@ func main() {
 	popularityRepo := repositories.NewBlogPopularityDataBaseService()
 	authRepo := repositories.NewRefreshTokenRepository()
 	otpService := repositories.NewUserOTPRepository()
-
 	// Initialize Services
 	passwaordService := infrastructure.NewPasswordService()
 	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
@@ -48,13 +47,13 @@ func main() {
 
 	// Initialize DataBase Repository
 	userController := controllers.NewUserUsecase(userUsecase, oauthUsecase)
-	passwordController := controllers.NewPasswordController(passwordUsecase)
+	passwordController := controllers.NewPasswordController(passwordUsecase, passwaordService)
 	blogController := controllers.NewController(blogUsecase, userUsecase)
 
 	//Initialize AI Interaction
 	aiCommentUsecase := usecases.NewAIusecaseComment()
 	aiBlogUsecase := usecases.NewAIusecaseBLog(blogUsecase)
-	aiFliterUsecase := usecases.NewAIusecaseFilter()
+	aiFliterUsecase := usecases.NewAIusecaseFilter(blogUsecase)
 	aiController := controllers.NewAIController(aiCommentUsecase, aiBlogUsecase, aiFliterUsecase)
 
 	// Initialize Routers

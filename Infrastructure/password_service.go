@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"log"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -25,15 +26,16 @@ func (p *PasswordService) IsStrongPassword(password string) bool {
 		number    = `[0-9]`
 		special   = `[!@#~$%^&*()_+|<>?:{}]`
 	)
-
+	log.Println("✅ indeed entered", len(password), password)
 	if len(password) < 8 {
+		log.Println("❌ less than 8")
 		return false
 	}
 	hasUpper := regexp.MustCompile(uppercase).MatchString(password)
 	hasLower := regexp.MustCompile(lowercase).MatchString(password)
 	hasNumber := regexp.MustCompile(number).MatchString(password)
 	hasSpecial := regexp.MustCompile(special).MatchString(password)
-
+	log.Println("✅", hasUpper, hasLower, hasNumber, hasSpecial)
 	return hasUpper && hasLower && hasNumber && hasSpecial
 }
 

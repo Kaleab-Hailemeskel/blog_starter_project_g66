@@ -139,3 +139,22 @@ func (repo *UserRepository) UpdateUserByEmail(email string, dto *domain.UpdatePr
 	}
 	return &updatedUser, nil
 }
+func (r *UserRepository) CreateSuperAdmin() error{
+
+  email := "superadmin@gmail.com"
+  username := "superadmin"
+  password := "123456789ADm@"
+
+  hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+  user := bson.M{
+    "username": username,
+    "email": email,
+    "password": string(hashedPassword),
+    "role": "SUPER_ADMIN",
+  }
+  _, err := r.collection.InsertOne(context.TODO(), user)
+  if err != nil {
+    return err
+  }
+  return nil
+}

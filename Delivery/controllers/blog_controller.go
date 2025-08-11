@@ -42,6 +42,7 @@ func (cntrl *BlogController) CreateBlog(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Email in context is not a string", "value": fmt.Sprintf("%v", emailVal)})
 		return
 	}
+	
 	createdBlog, err := cntrl.BlogUseCase.CreateBlog(blog, ownerEmail)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create blog", "details": err.Error()})

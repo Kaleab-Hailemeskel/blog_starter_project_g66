@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
 	"blog_starter_project_g66/config"
 	"context"
@@ -120,7 +121,7 @@ func (commInt *AICommentInteraction) ParseJsonBodyToDomain(aiResponse *domain.AI
 	return aiResponse.MainResponse
 }
 func (commInt *AICommentInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-  overAllPrompt := userMessage + `
+	overAllPrompt := userMessage + `
 pharaphrase the following without leaving the context, and feeling. ` + developerMessage + `
 correct: the grammar sentense structure and casing
 Generate a response that is a plain string. Do not use any special formatting or code block delimiters.
@@ -132,65 +133,70 @@ Generate a response that is a plain string. Do not use any special formatting or
    Here is the pharagraph:
 ` + jsonBodyStirng
 
-  return commInt.GenerateContent(overAllPrompt)
+	return commInt.GenerateContent(overAllPrompt)
 }
 
 func (blgInt *AIBlogInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
-	var generatedBlog domain.Blog
+	var generatedBlog domain.BlogDTO
 
 	if err := json.Unmarshal(aiResponse.MainResponse, &generatedBlog); err != nil {
 
 		return nil
 	}
 
-	return &generatedBlog
+	return conv.ChangeToDomainBlog(&generatedBlog)
 }
 func (blgInt *AIBlogInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-  overAllPrompt := developerMessage + userMessage + `
+	log.Println("✅✅✅✅")
+	overAllPrompt := developerMessage + userMessage + "Today is: " + time.Now().Format("2006-01-02") + `
         .The json format for the blog looks like the following:
     ` + jsonBodyStirng + `
 
         I want you to send me a response ONLY in the type of the following json string stucture, Generate a response that is a plain string. Do not use any special formatting or code block delimiters:
     {
-            "main_response":    {
-                    "title": // the title of the blog
+            "main_response":    { // this main structure need to be kept Creat the BLOG only in the following format
+                    "title": // the title of the blog, 
                     "tags": // list of possible tags for the blog, not more than 7,
                     "author": // create a place holder here like <Your_Name>,
                     "description": // the description part should be the body of the blog,
-                    "last_update_time": // the current time stamp.
+                    "last_update_time": // always set this to today time
             }
             "editorial_response": // this should contain the editorial message from the ai response
             "is_nil_response": // this should contain a boolean value weather the main_response is null or not
     }
     `
-  return blgInt.GenerateContent(overAllPrompt)
+	return blgInt.GenerateContent(overAllPrompt)
 }
 func (blgFilter *AIBlogFilterInteraction) ParseJsonBodyToDomain(aiResponse *domain.AIResponse) any {
 	var generatedFilter domain.AIBlogFilter
+	log.Println("____ What")
 	if err := json.Unmarshal(aiResponse.MainResponse, &generatedFilter); err != nil {
+		log.Println("____ ERROR")
 
 		return nil
 	}
+	log.Println("____ Passed", generatedFilter)
+
 	return &generatedFilter
 }
 func (blgFilter *AIBlogFilterInteraction) CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*domain.AIResponse, error) {
-  overAllPrompt := developerMessage + jsonBodyStirng + "Today is: " + time.Now().Format("2006-01-02") + `
+	overAllPrompt := developerMessage + jsonBodyStirng + "Today is: " + time.Now().Format("2006-01-02") + `
     Create a filter using the information provided by the following prompt:
 ` + userMessage + `
     .Generate a response that is a plain string. Do not use any special formatting or code block delimiters. The json filter structure looks like this:
     {
     "main_response": {
-            "tags": // list of possible tags from the user prompt
-            "after_date": // provide the ISO 8601 formatted date representing the start of the last full day. For example, if today is August 6, 2025, the value should be "2025-08-05T00:00:00Z". This ensures the filter includes posts from the previous day but not the current one. if the user has some thing about last week: calculate it from last week monday
+            "tags": // list of possible tags from the user prompt, , if absent make it []
+            "after_date": // if absent make it null, provide the ISO 8601 formatted date representing the start of the last full day. For example, if today is August 6, 2025, the value should be "2025-08-05T00:00:00Z". This ensures the filter includes posts from the previous day but not the current one. if the user has some thing about last week: calculate it from last week monday
             last month: calculate it from the first day of last month
             last year calculate it from the first day of the last year
-                "title": // if the user gives a title for the blog
-            "author_name": // possible name of the blog author
+            "title": // if the user gives a title for the blog
+            "author_name": // possible name of the blog author, , if absent make it ""
                 }  
                 "editorial_response": // this should contain the editorial message from the ai response
                 "is_nil_response": // this should contain a boolean value whether the main_response is null or not; if there is at least one non-null value, make it false
             }
     Keep in mind that if the prompt didn't mention any of the fields, use an empty string or null value as needed when returning the result.`
 
-  return blgFilter.GenerateContent(overAllPrompt)
+	return blgFilter.GenerateContent(overAllPrompt)
 }

@@ -14,20 +14,19 @@ import (
 // 	BlogUC BlogUseCase
 // }
 
-type AICommentUsecase struct{
+type AICommentUsecase struct {
 	// AiComment domain.IAIInteraction
 }
 
-type AIFilterUsecase struct{
-	
+type AIFilterUsecase struct {
+	BlogUC domain.IBlogUseCase
 	// AiFilter domain.IAIInteraction
 }
 
-type AIBlogUsecase struct{
+type AIBlogUsecase struct {
 	// AiBlog domain.IAIInteraction
 	BlogUC domain.IBlogUseCase
 }
-
 
 func NewAIusecaseComment() *AICommentUsecase {
 	return &AICommentUsecase{
@@ -40,78 +39,84 @@ func NewAIusecaseBLog(bu domain.IBlogUseCase) *AIBlogUsecase {
 		BlogUC: bu,
 	}
 }
-func NewAIusecaseFilter() *AIFilterUsecase{
+func NewAIusecaseFilter(bu domain.IBlogUseCase) *AIFilterUsecase {
 	return &AIFilterUsecase{
+		BlogUC: bu,
 		// AiFilter: newFliter,
 	}
 }
+
 // func NewAIBlogUsecase(newbguc BlogUseCase,) *AIusecase {
 // 	return &AIusecase{
 // 		BlogUC:newbguc ,
 // 	}
 // }
 
-func (au *AICommentUsecase) AICommentUsecase(userReq *domain.AICommentDTO,aIInteraction domain.IAIInteraction) (string, error) {
-	res , err :=aIInteraction.CallAIAndGetResponse("", userReq.UserMessage,userReq.Comment)
-	log.Println("!!!!!!!!!!!!#in usecase",res)
-	if err != nil{
-		return "",err
+func (au *AICommentUsecase) AICommentUsecase(userReq *domain.AICommentDTO, aIInteraction domain.IAIInteraction) (string, error) {
+	res, err := aIInteraction.CallAIAndGetResponse("", userReq.UserMessage, userReq.Comment)
+	log.Println("!!!!!!!!!!!!#in usecase", res)
+	if err != nil {
+		return "", err
 	}
-	if res.IsNilResponse{
-		return "",errors.New("nil comment")
+	if res.IsNilResponse {
+		return "", errors.New("nil comment")
 	}
 	mainResponse := string(aIInteraction.ParseJsonBodyToDomain(res).(json.RawMessage))
 
 	return mainResponse, nil
 }
 
-func (au *AIBlogUsecase) AIBlogUsecase(userID string,userReq *domain.AIBlogDTO, aIInteraction domain.IAIInteraction) (domain.Blog, error){
-	
+func (au *AIBlogUsecase) AIBlogUsecase(userID string, userReq *domain.AIBlogDTO, aIInteraction domain.IAIInteraction) (domain.Blog, error) {
 
 	objID, err := primitive.ObjectIDFromHex(userID)
-    if err != nil {
-        return domain.Blog{},err
-    }
-	blogDTO, err:=au.BlogUC.GetBlogByID(objID)
-	if err != nil{
-		return domain.Blog{},err
-	}
-	blogDomain :=conv.ChangeToDomainBlog(blogDTO)
-	jsonData, err := json.Marshal(blogDomain)
-	if err != nil{
-		return domain.Blog{},err
-	}
-
-	res , err :=aIInteraction.CallAIAndGetResponse("","",string(jsonData))
-	if err != nil{
-		return domain.Blog{},err
-	}
-	if res.IsNilResponse{
-		return domain.Blog{},errors.New("nil blog")
-	}
-	var blog domain.Blog
-	err = json.Unmarshal(aIInteraction.ParseJsonBodyToDomain(res).(json.RawMessage), &blog)
 	if err != nil {
-
-		return domain.Blog{},err
+		return domain.Blog{}, err
+	}
+	blogDTO, err := au.BlogUC.GetBlogByID(objID)
+	if err != nil {
+		return domain.Blog{}, err
+	}
+	blogDomain := conv.ChangeToDomainBlog(blogDTO)
+	jsonData, err := json.Marshal(blogDomain)
+	if err != nil {
+		return domain.Blog{}, err
 	}
 
-	return blog, nil
+	res, err := aIInteraction.CallAIAndGetResponse("", "", string(jsonData))
+	if err != nil {
+		return domain.Blog{}, err
+	}
+	if res.IsNilResponse {
+		return domain.Blog{}, errors.New("nil blog")
+	}
+	var blog *domain.Blog
+	log.Println("💀 Before")
+	blog = aIInteraction.ParseJsonBodyToDomain(res).(*domain.Blog)
+
+	log.Println("💀 AFter")
+
+	return *blog, nil
 }
 
-func (au *AIFilterUsecase) AIFilterUsecase(userReq *domain.AIBlogDTO,aIInteraction domain.IAIInteraction) (domain.Blog, error){
-	var blog domain.Blog
-	res, err := aIInteraction.CallAIAndGetResponse("",userReq.UserMessage,"")
+func (au *AIFilterUsecase) AIFilterUsecase(userReq *domain.AIBlogDTO, aIInteraction domain.IAIInteraction) ([]*domain.Blog, error) {
+	res, err := aIInteraction.CallAIAndGetResponse("", userReq.UserMessage, "")
 	if err != nil {
-
-		return domain.Blog{},err
+		return nil, err
 	}
-	err = json.Unmarshal(aIInteraction.ParseJsonBodyToDomain(res).(json.RawMessage), &blog)
+	resFilter := aIInteraction.ParseJsonBodyToDomain(res).(*domain.AIBlogFilter)
+	log.Println("NICE", resFilter)
+	resList, err := au.BlogUC.GetMainBlogByAIFitlter(resFilter)
+	log.Println("Making the resList")
 	if err != nil {
-
-		return domain.Blog{},err
+		return nil, err
 	}
-
-
-	return blog, nil
+	resBlogList := []*domain.Blog{}
+	log.Println("ምን ያደርጋል ኤአይ response is null")
+	if resList == nil {
+		return nil, nil
+	}
+	for _, each_blog_dto := range resList {
+		resBlogList = append(resBlogList, conv.ChangeToDomainBlog(each_blog_dto))
+	}
+	return resBlogList, nil
 }

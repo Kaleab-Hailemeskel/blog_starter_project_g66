@@ -63,22 +63,27 @@ type CommentDTO struct {
 }
 
 type UpdateProfileDTO struct {
-	UserName       string             `json:"username" bson:"username"`
-	PersonalBio    string             `json:"personal_bio" bson:"personal_bio"`
-	ProfilePic     string             `json:"profile_pic" bson:"profile_pic"` // store as URL or base64
-	Email          string             `json:"email" bson:"email"`
-	PhoneNum       string             `json:"phone_num" bson:"phone_num"` // validate format
-	TelegramHandle string             `json:"telegram_handle" bson:"telegram_handle"`
-	Password       string             `json:"password" bson:"password"` // securely hashed
+	UserName       string `json:"username" bson:"username"`
+	PersonalBio    string `json:"personal_bio" bson:"personal_bio"`
+	ProfilePic     string `json:"profile_pic" bson:"profile_pic"` // store as URL or base64
+	Email          string `json:"email" bson:"email"`
+	PhoneNum       string `json:"phone_num" bson:"phone_num"` // validate format
+	TelegramHandle string `json:"telegram_handle" bson:"telegram_handle"`
+	Password       string `json:"password" bson:"password"` // securely hashed
 }
 
-type AICommentDTO struct{
+type AICommentDTO struct {
 	UserMessage string `json:"usermessage" bson:"usermessage"`
-	Comment string	`json:"comment" bson:"comment"`
+	Comment     string `json:"comment" bson:"comment"`
 }
 
-type AIBlogDTO struct{
+type AIBlogDTO struct {
 	UserMessage string `json:"usermessage" bson:"usermessage"`
+}
+
+type AIUserBlogDTO struct {
+	BlogDTO     *BlogDTO `json:"my_blog" bson:"my_blog"`
+	UserMessage string  `json:"usermessage" bson:"usermessage"`
 }
 
 // type AIBlogGenerationDTO struct{

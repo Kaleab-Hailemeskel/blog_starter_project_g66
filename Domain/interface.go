@@ -17,6 +17,7 @@ type IUserRepository interface {
 	UpdateRole(email, role string) error
 	UpdateUserByEmail(email string, dto *UpdateProfileDTO) (*UserDTO, error)
 	GetUserByID(userID string) (*UserDTO, error)
+	CreateSuperAdmin() error
 	CloseDataBase() error
 }
 type IAuthRepo interface {
@@ -46,6 +47,7 @@ type IPopularityRepository interface {
 	CheckUserLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
 	CheckUserDisLikeBlogID(blogID primitive.ObjectID, userID primitive.ObjectID) bool
 	UserLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error // revert boolean helps to undo the like while disliking the blog
+	DeletePopularityBlogByID(blogID primitive.ObjectID) error
 	UserDisLikeBlogByID(blogID primitive.ObjectID, userID primitive.ObjectID, revert bool) error
 	CreateBlogPopularity(blogID primitive.ObjectID) (*PopularityDTO, error)
 	UpdatePopularityValueByBlogID(blogID primitive.ObjectID, calculatedValue int) error
@@ -107,8 +109,8 @@ type IUserUseCase interface {
 	GetUserByEmail(email string) (*UserDTO, error)
 }
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) 
-	DeleteBlogByID(blogID string) error                       
+	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error)
+	DeleteBlogByID(blogID string) error
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	// page number needed for the purpose of pagination
@@ -123,6 +125,8 @@ type IBlogUseCase interface {
 	CommentBlogByID(blogID primitive.ObjectID, commentDTO *Comment) error
 
 	GetMainBlogAndPopularityBlogByID(blogID primitive.ObjectID) (*BlogDTO, *PopularityDTO, error)
+
+	GetMainBlogByAIFitlter(aiFilter *AIBlogFilter) ([]*BlogDTO, error)
 }
 type IPasswordUsecase interface {
 	GenerateResetToken(email string) error
@@ -139,5 +143,5 @@ type IAIBlogUsecase interface {
 	AIBlogUsecase(userID string, userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
 }
 type IAIFilterUsecase interface {
-	AIFilterUsecase(userReq *AIBlogDTO, aIInteraction IAIInteraction) (Blog, error)
+	AIFilterUsecase(*AIBlogDTO, IAIInteraction) ([]*Blog, error)
 }
