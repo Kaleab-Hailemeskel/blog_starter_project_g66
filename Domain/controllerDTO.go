@@ -48,7 +48,7 @@ type BlogDTO struct {
 type PopularityDTO struct {
 	PopularityID    primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	BlogID          primitive.ObjectID `json:"blog_id" bson:"blog_id"`
-	PopularityValue int                `json:"popularity_value" bson:"popularity_value"`
+	PopularityValue int                `json:"popularity_value" bson:"popularity_value"` // it should be either ascending or descending or non(zero)
 	ViewCount       int                `json:"view_count" bson:"view_count"`
 	Likes           []string           `json:"likes" bson:"likes"`       // list of user_ids — deduplicate before insert
 	Dislikes        []string           `json:"dislikes" bson:"dislikes"` // list of user_ids — same

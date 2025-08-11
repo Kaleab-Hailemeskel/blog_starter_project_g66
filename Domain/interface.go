@@ -7,55 +7,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type IAuthService interface {
-	GenerateTokens(user *UserDTO) (string, string, error)
-	// ValidateAccessToken(tokenStr string) (jwt.MapClaims, error)
-	ValidateRefreshToken(tokenStr string) (string, error)
-	ValidateToken(tokenStr string) (jwt.MapClaims, error)
-	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
-}
-type IAuthRepo interface {
-	Save(token *RefreshToken) error
-	GetByToken(token string) (*RefreshToken, error)
-	Delete(token string) error
-}
-
-type IUserRepository interface { // eka was here
+// DATABASE Repositorys
+type IUserRepository interface {
+	// eka was here
 	Create(user *User) error
-
-	// UpdatePassword(userEmail string, updatedPassword string) error
-	// EditUserByEmail(userEmail string, updatedUserInfo *User) error
 	FindByEmail(email string) (*UserDTO, error) //checks if user exisits or not
 	UpdatePassword(userID, hashedPassword string) error
 	CheckUserExistance(userEmail string) bool
 	UpdateRole(email, role string) error
 	UpdateUserByEmail(email string, dto *UpdateProfileDTO) (*UserDTO, error)
-	// DemoteUser(userEmail string) error
-	// PromoteUser(userEmail string) error
 	GetUserByID(userID string) (*UserDTO, error)
 	CloseDataBase() error
 }
-
-type IUserValidation interface {
-	IsValidEmail(email string) bool
-	IsStrongPassword(password string) bool
-	Hashpassword(password string) string
-	ComparePassword(userPassword, password string) error
+type IAuthRepo interface {
+	Save(token *RefreshToken) error
+	GetByToken(token string) (*RefreshToken, error)
+	Delete(token string) error
+	CloseDataBase() error
 }
-type IUserOTP interface {
+type IUserOTPRepository interface {
 	StoreOTP(entry UserUnverified) error
 	FindOTP(email string) (*UserUnverified, error)
 	DeleteOTP(email string) error
-}
-type IEmailService interface {
-	Send(email string, token string) error
-	GenerateRandomOTP() string
-	SendResetLink(toEmail, subject, message string) error
+	CloseDataBase() error
 }
 type IBlogRepository interface {
 	IsClientConnected() bool // just for testing on the testify purpose
 	CreateBlog(blog *Blog, userID primitive.ObjectID) (*BlogDTO, error)
-	CreateBlog(blog *Blog, userID primitive.ObjectID) (*Blog, error)
 	FindBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	DeleteBlogByID(blogID primitive.ObjectID) error
 	UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *Blog) error
@@ -82,9 +60,55 @@ type IPopularityRepository interface {
 	CloseDataBase() error
 }
 
+// SERVICE implementation
+type IAuthService interface {
+	GenerateTokens(user *UserDTO) (string, string, error)
+	ValidateRefreshToken(tokenStr string) (string, error)
+	ValidateToken(tokenStr string) (jwt.MapClaims, error)
+	OAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
+}
+type IUserValidation interface {
+	IsValidEmail(email string) bool
+	IsStrongPassword(password string) bool
+	Hashpassword(password string) string
+	ComparePassword(userPassword, password string) error
+}
+type IUserOTP interface {
+	StoreOTP(entry UserUnverified) error
+	FindOTP(email string) (*UserUnverified, error)
+	DeleteOTP(email string) error
+}
+type IEmailService interface {
+	Send(email string, token string) error
+	GenerateRandomOTP() string
+	SendResetLink(toEmail, subject, message string) error
+}
+
+type IAIInteraction interface {
+	IsClientConnected() bool
+	GenerateContent(prompt string) (*AIResponse, error)
+	ParseJsonBodyToDomain(aiResponse *AIResponse) any
+	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
+	IncrementInteractionCount()
+	CloseAIConnection() error
+}
+
+// USECASE declarations
+type IUserUseCase interface {
+	HandleRegistration(user *User) error
+	SendOTP(user *User) error
+	VerifyOTP(email, otp string) (bool, error)
+	PromoteUser(actor, target string) error
+	DemoteUser(actor, target string) error
+	Login(email, password string) (*AuthTokens, error)
+	Refresh(oldRefreshToken string) (*AuthTokens, error)
+	Logout(refreshToken string) error
+	UpdateProfile(email string, dto *UpdateProfileDTO) (*UserDTO, error)
+	GetUserByEmail(email string) (*UserDTO, error)
+}
 type IBlogUseCase interface {
-	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) //! Instead of userEmail as string we can pass userID instantly
-	DeleteBlogByID(blogID string) error                     // the controller will pass the a string from the url the usecase will change it to the objectID
+	CreateBlog(blog *Blog, userEmail string) (*BlogDTO, error) 
+	DeleteBlogByID(blogID string) error                       
 	UpdateBlogByID(blogID string, updatedBlog *Blog) error
 	GetBlogByID(blogID primitive.ObjectID) (*BlogDTO, error)
 	// page number needed for the purpose of pagination
@@ -97,22 +121,15 @@ type IBlogUseCase interface {
 	GetPopularityBlogByID(blogID primitive.ObjectID) (*PopularityDTO, error)
 	CalcualtePopularity(blog *PopularityDTO) int
 	CommentBlogByID(blogID primitive.ObjectID, commentDTO *Comment) error
-	
+
 	GetMainBlogAndPopularityBlogByID(blogID primitive.ObjectID) (*BlogDTO, *PopularityDTO, error)
 }
-
 type IPasswordUsecase interface {
 	GenerateResetToken(email string) error
 	ResetPassword(token, newPassword string) error
 }
-
-type IAIInteraction interface {
-	IsClientConnected() bool
-	GenerateContent(prompt string) (*AIResponse, error)
-	ParseJsonBodyToDomain(aiResponse *AIResponse) any
-	CallAIAndGetResponse(developerMessage string, userMessage string, jsonBodyStirng string) (*AIResponse, error)
-	IncrementInteractionCount()
-	CloseAIConnection() error
+type IOAuthUsecase interface {
+	HandleOAuthLogin(req *http.Request, res http.ResponseWriter) (*UserDTO, error)
 }
 
 type IAICommentUsecase interface {

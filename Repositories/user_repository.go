@@ -3,6 +3,7 @@ package repositories
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"errors"
 	"log"
@@ -13,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
-	// "golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -22,14 +22,11 @@ type UserRepository struct {
 	Client     *mongo.Client
 }
 
-const (
-	UserDataBaseName   = "user_db_test"
-	UserCollectionName = "users"
-)
-
-func NewUserRepository() *UserRepository {
+func NewUserRepository() domain.IUserRepository {
 	connection, err := Connect()
-
+	mainBlogDbName := config.BLOG_DB
+	UserDataBaseName := config.USER_DB
+	UserCollectionName := config.USER_COLLECTION_NAME
 	if err != nil {
 		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
@@ -49,7 +46,6 @@ func (r *UserRepository) Create(user *domain.User) error {
 	_, err := r.collection.InsertOne(r.Contxt, userDTO)
 	return err
 }
-
 func (r *UserRepository) CheckUserExistance(userEmail string) bool {
 	filter := bson.M{"email": userEmail}
 	err := r.collection.FindOne(r.Contxt, filter).Err()
@@ -67,7 +63,6 @@ func (r *UserRepository) FindByEmail(email string) (*domain.UserDTO, error) {
 	return &user, nil
 
 }
-
 func (r *UserRepository) GetUserByID(userID string) (*domain.UserDTO, error) {
 	var user domain.UserDTO
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -83,11 +78,9 @@ func (r *UserRepository) GetUserByID(userID string) (*domain.UserDTO, error) {
 	}
 	return &user, nil
 }
-
 func (r *UserRepository) CloseDataBase() error {
 	return r.Client.Disconnect(r.Contxt)
 }
-
 func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -97,7 +90,6 @@ func (r *UserRepository) UpdatePassword(userID, hashedPassword string) error {
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	return err
 }
-
 func (r *UserRepository) UpdateRole(email, role string) error {
 	filter := bson.M{"email": email}
 	update := bson.M{"$set": bson.M{"role": role}}
@@ -105,7 +97,6 @@ func (r *UserRepository) UpdateRole(email, role string) error {
 	_, err := r.collection.UpdateOne(r.Contxt, filter, update)
 	return err
 }
-
 func (repo *UserRepository) UpdateUserByEmail(email string, dto *domain.UpdateProfileDTO) (*domain.UserDTO, error) {
 	filter := bson.M{"email": email}
 

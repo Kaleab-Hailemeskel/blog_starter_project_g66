@@ -1,64 +1,63 @@
 package main
 
-import (
-	"blog_starter_project_g66/Delivery/controllers"
-	"blog_starter_project_g66/Delivery/oauth"
-	"blog_starter_project_g66/Delivery/routers"
-	infrastructure "blog_starter_project_g66/Infrastructure"
-	repositories "blog_starter_project_g66/Repositories"
-	usecases "blog_starter_project_g66/Usecases"
-	"log"
-	"os"
+// import (
+// 	"blog_starter_project_g66/Delivery/controllers"
+// 	"blog_starter_project_g66/Delivery/oauth"
+// 	"blog_starter_project_g66/Delivery/routers"
+// 	infrastructure "blog_starter_project_g66/Infrastructure"
+// 	repositories "blog_starter_project_g66/Repositories"
+// 	usecases "blog_starter_project_g66/Usecases"
+// 	"blog_starter_project_g66/config"
+// 	"log"
+// )
 
-	"github.com/joho/godotenv"
-)
+// func main() {
+// 	config.InitEnv()
+// 	mongoClient, err := repositories.Connect()
+// 	if err != nil {
+// 		log.Fatal("❌Failed to connect:", err)
+// 	}
+// 	defer mongoClient.Disconnect()
 
-func main() {
-	mongoClient, err := repositories.Connect()
-	if err != nil {
-		log.Fatal("❌Failed to connect:", err)
-	}
-	defer mongoClient.Disconnect()
+// 	from := config.FROM
+// 	appPass := config.APPPASS
+// 	smtpServer := config.SMTPSERVER
+// 	smtpPort := config.SMTPPORT
+// 	user := config.SMTPUSER
+// 	jwtSecret := config.JWTSECRET
 
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+// 	oauth.InitOAuth()
+// 	// Initialize DataBase Repository
+// 	userRepo := repositories.NewUserRepository()
+// 	blogRepo := repositories.NewBlogDataBaseService()
+// 	popularityRepo := repositories.NewBlogPopularityDataBaseService()
+// 	authRepo := repositories.NewRefreshTokenRepository()
+// 	otpService := repositories.NewUserOTPRepository()
 
-	from := os.Getenv("FROM")
-	appPass := os.Getenv("APPPASS")
-	smtpServer := os.Getenv("SMTPSERVER")
-	smtpPort := os.Getenv("SMTPPORT")
-	user := os.Getenv("SMTP_USER")
-	jwtSecret := os.Getenv("JWT_SECRET")
-	
-	oauth.InitOAuth()
+// 	// Initialize Services
+// 	passwaordService := infrastructure.NewPasswordService()
+// 	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
+// 	authService := infrastructure.NewJWTService(authRepo)
+// 	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
 
-	authRepo := repositories.NewRefreshTokenRepository(mongoClient)
-	authMiddleware := infrastructure.NewAuthMiddleware(authRepo)
-	authService := infrastructure.NewJWTService(authRepo)
-	emailService := infrastructure.NewOTP_service(from, appPass, smtpServer, smtpPort, user)
-	userRepo := repositories.NewUserRepository()
-	oauthUsecase :=usecases.NewOAuthUsecase(userRepo,authService)
-	otpService := repositories.NewUserOTPRepository(mongoClient)
-	passwaordService := infrastructure.NewPasswordService()
-	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService, authService, authRepo)
-	userController := controllers.NewUserUsecase(userUsecase,oauthUsecase)
+// 	// Initialize UseCases
+// 	oauthUsecase := usecases.NewOAuthUsecase(userRepo, authService)
+// 	userUsecase := usecases.NewUserUsecase(userRepo, passwaordService, otpService, emailService, authService, authRepo)
+// 	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
+// 	passwordUsecase := usecases.NewPasswordUsecase(userRepo, emailService, jwtSecret)
 
+// 	// Initialize DataBase Repository
+// 	userController := controllers.NewUserUsecase(userUsecase, oauthUsecase)
+// 	passwordController := controllers.NewPasswordController(passwordUsecase)
+// 	blogController := controllers.NewController(blogUsecase, userUsecase)
 
-	passwordUsecase := usecases.NewPasswordUsecase(userRepo, emailService, jwtSecret)
-	passwordController := controllers.NewPasswordController(passwordUsecase)
-	
+// 	//Initialize AI Interaction
+// 	aiCommentUsecase := usecases.NewAIusecaseComment()
+// 	aiBlogUsecase := usecases.NewAIusecaseBLog(blogUsecase)
+// 	aiFliterUsecase := usecases.NewAIusecaseFilter()
+// 	aiController := controllers.NewAIController(aiCommentUsecase, aiBlogUsecase, aiFliterUsecase)
 
-	blogRepo := repositories.NewBlogDataBaseService()
-	popularityRepo := repositories.NewBlogPopularityDataBaseService()
-	blogUsecase := usecases.NewBlogUseCase(blogRepo, userRepo, popularityRepo)
-	blogController := controllers.NewController(blogUsecase)
+// 	// Initialize Routers
+// 	routers.Router(userController, passwordController, blogController, authMiddleware, aiController)
 
-	aiCommentUsecase :=usecases.NewAIusecaseComment()
-	aiBlogUsecase := usecases.NewAIusecaseBLog(blogUsecase)
-	aiFliterUsecase := usecases.NewAIusecaseFilter()
-	aiController := controllers.NewAIController(aiCommentUsecase,aiBlogUsecase,aiFliterUsecase)
-	routers.Router(userController, passwordController, blogController, authMiddleware, aiController)
-
-}
+// }

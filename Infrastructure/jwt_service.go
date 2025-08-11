@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,8 +23,8 @@ func NewJWTService(auth domain.IAuthRepo) *JWTService {
 	}
 }
 
-var jwtSecret = []byte("access-secret")
-var refreshSecret = []byte("refresh-secret")
+var jwtSecret = []byte(config.JWTSECRET)
+var refreshSecret = []byte(config.JWTREFRESHSECRET)
 
 func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error) {
 	if user.Email == "" {

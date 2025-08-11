@@ -3,7 +3,9 @@ package usecases
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	repositories "blog_starter_project_g66/Repositories"
 	"fmt"
+	"sort"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -86,9 +88,33 @@ func (bluc *BlogUseCase) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumb
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
-	if res, err := bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber); err != nil {
+	res, err := bluc.BlogDataBase.GetAllBlogsByFilter(url_filter, pageNumber)
+	if err != nil {
 		return nil, err
 	} else {
+		if url_filter.Popularity_value != 0 {
+			// if the popularity value is set to either ascending or descending we have to fetch the popValue using the id number and sort the it using that.
+			blogWithPopValue := []domain.BlogWithPopValue{}
+			for _, each_blog := range res {
+				popBlogres, _ := bluc.GetPopularityBlogByID(each_blog.BlogID)
+				if popBlogres != nil {
+					blogWithPopValue = append(blogWithPopValue, domain.BlogWithPopValue{
+						PopularityValue: popBlogres.PopularityValue,
+						Blog:            each_blog,
+					})
+				}
+			}
+			if url_filter.Popularity_value == repositories.ASC{ // if the filter of pop_value was marked as ASC it should be sorted ascending Else it will be descending
+				sort.Sort(domain.ByPopularityValue(blogWithPopValue))
+			}else{
+				sort.Sort(domain.ByPopularityValueDesc(blogWithPopValue))
+			}
+			newRes := []*domain.BlogDTO{}
+			for _, rrRes := range blogWithPopValue {
+				newRes = append(newRes, rrRes.Blog)
+			}
+			return newRes, nil
+		}
 		return res, nil
 	}
 }
