@@ -193,5 +193,24 @@ Body:
 Method:
 Response
 
+17. AI routes
+
+Endpoint: /ai/comment
+Body:
+Method: GET
+Response 
+
+Endpoint: /ai/:id
+Body:
+Method: GET
+Response
+
+Endpoint: /ai/filter
+Body:
+Method: GET
+Response
+
+
+
 
 
