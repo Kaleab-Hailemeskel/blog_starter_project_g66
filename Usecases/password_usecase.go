@@ -11,16 +11,16 @@ import (
 )
 
 type passwordUsecase struct {
-	userRepo  		domain.IUserRepository
-	emailService	domain.IEmailService
-	jwtSecret 		string
+	userRepo     domain.IUserRepository
+	emailService domain.IEmailService
+	jwtSecret    string
 }
 
 func NewPasswordUsecase(repo domain.IUserRepository, emailser domain.IEmailService, jwtSec string) domain.IPasswordUsecase {
 	return &passwordUsecase{
-		userRepo:  repo,
+		userRepo:     repo,
 		emailService: emailser,
-		jwtSecret: jwtSec,
+		jwtSecret:    jwtSec,
 	}
 }
 
@@ -34,6 +34,7 @@ func (u *passwordUsecase) GenerateResetToken(email string) error {
 		"user_id": user.UserID.Hex(),
 		"email":   user.Email,
 		"exp":     time.Now().Add(15 * time.Minute).Unix(),
+		"type":    "reset",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -46,7 +47,7 @@ func (u *passwordUsecase) GenerateResetToken(email string) error {
 	resetURL := fmt.Sprintf("http://localhost:3000/reset-password?token=%s", signedToken)
 	subject := "Password Reset Request"
 	message := fmt.Sprintf("Click the link below to reset your password:\n\n%s\n\nThis link will expire in 15 minutes.", resetURL)
-	
+
 	if err := u.emailService.SendResetLink(user.Email, subject, message); err != nil {
 		return fmt.Errorf("failed to send reset email: %w", err)
 	}
@@ -65,6 +66,11 @@ func (u *passwordUsecase) ResetPassword(tokenStr, newPassword string) error {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return errors.New("invalid token claims")
+	}
+	resetType, exist := claims["type"]
+	if !exist || resetType != "reset" {
+		return errors.New("invalid token claims aldjkflajdkf")
+
 	}
 
 	email, ok := claims["email"].(string)

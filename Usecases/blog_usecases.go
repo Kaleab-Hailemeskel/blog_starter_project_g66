@@ -96,7 +96,7 @@ func (bluc *BlogUseCase) GetMainBlogByAIFitlter(aiFilter *domain.AIBlogFilter) (
 	}
 	log.Println("✅ AI filtering")
 	finalRes := []*domain.BlogDTO{}
-	if aiFilter.Tags != nil && len(aiFilter.Tags) > 0 {
+	if len(aiFilter.Tags) > 0 {
 		for _, each_tag := range aiFilter.Tags {
 			resList, _ := bluc.GetAllBlogsByFilter(
 				&domain.Filter{

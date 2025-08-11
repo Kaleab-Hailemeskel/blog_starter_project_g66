@@ -36,6 +36,7 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 		"email":   user.Email,
 		"role":    user.Role,
 		"exp":     time.Now().Add(15 * time.Minute).Unix(),
+		"type":    "access",
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	atString, err := accessToken.SignedString(jwtSecret)
@@ -49,6 +50,7 @@ func (j *JWTService) GenerateTokens(user *domain.UserDTO) (string, string, error
 		"email":   user.Email,
 		"role":    user.Role,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"type":    "refresh",
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	rtString, err := refreshToken.SignedString(refreshSecret)
@@ -74,6 +76,12 @@ func (j *JWTService) ValidateRefreshToken(tokenStr string) (string, error) {
 	}
 
 	// Manually check expiration
+	authType, exist := claims["type"].(string)
+	if !exist {
+		return "", errors.New("invalid token claims")
+	} else if authType != "refresh" {
+		return "", errors.New("invalid token claims")
+	}
 	expFloat, ok := claims["exp"].(float64)
 	if !ok {
 		return "", errors.New("invalid exp claim")
@@ -110,7 +118,12 @@ func (j *JWTService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	if !ok || claims["user_id"] == nil {
 		return nil, errors.New("invalid claims")
 	}
-
+	typeAccess, exist :=claims["type"].(string)
+	if !exist{
+		return nil, errors.New("invalid claims")
+	}else if typeAccess != "access"{
+		return nil, errors.New("invalid claims")
+	}
 	email, ok := claims["email"].(string)
 	if !ok || email == "" {
 		return nil, errors.New("invalid or missing email in token")
