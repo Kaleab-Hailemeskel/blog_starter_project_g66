@@ -3,6 +3,7 @@ package repositories
 import (
 	conv "blog_starter_project_g66/Delivery/converter"
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
 	"fmt"
 	"log"
@@ -15,22 +16,20 @@ import (
 )
 
 const (
-	mainBlogDbName           = "blogbd_test"
-	mainBlogDbCollName       = "blogCollection"
-	blogPopularityDbName     = "blogPop_test"
-	blogPopularityDbCollName = "blogPop_collection"
-	pageSize                 = 10
+	ASC  = 1
+	DESC = -1
 )
 
 type BlogDB struct {
-	Coll   mongo.Collection
+	Coll   *mongo.Collection
 	Contxt context.Context
 	Client *mongo.Client
 }
 
 func NewBlogDataBaseService() domain.IBlogRepository {
 	connection, err := Connect()
-
+	mainBlogDbCollName := config.BLOG_COLLECTION_NAME
+	mainBlogDbName := config.BLOG_DB
 	if err != nil {
 		log.Fatal("can't initailize ", mainBlogDbName, " Database")
 	}
@@ -38,27 +37,34 @@ func NewBlogDataBaseService() domain.IBlogRepository {
 	collection := connection.Client.Database(mainBlogDbName).Collection(mainBlogDbCollName)
 
 	return &BlogDB{
-		Coll:   *collection,
+		Coll:   collection,
 		Contxt: context.TODO(),
 		Client: connection.Client,
 	}
 
 }
-
-func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) error {
-
-	blog.LastUpdate = time.Now()
-	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO
-	blogDTO.OwnerID = userID
-	_, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
-	if err != nil {
-		return fmt.Errorf("error creating blog: %w", err)
-	}
-	return nil
+func (bldb *BlogDB) IsClientConnected() bool {
+	return bldb.Client != nil && bldb.Coll != nil
 }
-func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.Blog, error) {
+func (bldb *BlogDB) CreateBlog(blog *domain.Blog, userID primitive.ObjectID) (*domain.BlogDTO, error) {
+	//
+	blog.LastUpdate = time.Now()
+	log.Println("➡️➡️ ", blog.LastUpdate, "Now: ", time.Now())
+	log.Println("... Changing to BlogDTO")
+	blogDTO := conv.ChangeToDTOBlog(blog) // Convert domain.Blog to controllers.BlogDTO this part is needed since the plain Blog doesn't has the json specifications
+	blogDTO.OwnerID = userID
+	log.Println("... Insetring into BlogDB")
+	insertInfo, err := bldb.Coll.InsertOne(bldb.Contxt, blogDTO) // Insert the DTO into the collection
+	if err != nil {
+		return nil, fmt.Errorf("error creating blog: %w", err)
+	}
+	log.Println("\t✅ Blog Created")
+	blogDTO.BlogID = insertInfo.InsertedID.(primitive.ObjectID)
+	return blogDTO, nil
+}
+func (bldb *BlogDB) FindBlogByID(blogID primitive.ObjectID) (*domain.BlogDTO, error) {
 	filter := bson.M{"_id": blogID}
-	var blog domain.Blog
+	var blog domain.BlogDTO
 	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&blog)
 	if err != nil {
 		return nil, err
@@ -101,11 +107,12 @@ func (bldb *BlogDB) UpdateBlogByID(blogID primitive.ObjectID, updatedBlog *domai
 	return nil
 }
 func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber int) ([]*domain.BlogDTO, error) {
+	pageSize := config.BLOGS_PER_PAGE_INT
 	skip := int64((pageNumber - 1) * pageSize)
 	limit := int64(pageSize)
 
 	filter := bson.M{}
-	{
+	if url_filter != nil {
 		if url_filter.Tag != "" {
 			// Use $regex for case-insensitive partial match on tags array
 			filter["tags"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Tag, Options: "i"}}
@@ -116,13 +123,14 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 		if url_filter.Title != "" {
 			filter["title"] = bson.M{"$regex": primitive.Regex{Pattern: url_filter.Title, Options: "i"}}
 		}
-		if !url_filter.AfterDate.IsZero() {
+		if url_filter.AfterDate != nil && !url_filter.AfterDate.IsZero() {
 			filter["last_update"] = bson.M{"$gte": url_filter.AfterDate}
 		}
 
 	}
 
 	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "last_update", Value: -1}})
+	log.Println("✅ filtering finished")
 
 	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
 	if err != nil {
@@ -144,6 +152,7 @@ func (bldb *BlogDB) GetAllBlogsByFilter(url_filter *domain.Filter, pageNumber in
 	if err = cursor.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating through filtered blog cursor: %w", err)
 	}
+	log.Println("✅ Returning from Get ALL Blogs")
 	return blogs, nil
 }
 func (bldb *BlogDB) CheckBlogExistance(blogID primitive.ObjectID) bool {
@@ -175,7 +184,8 @@ type PopularityDB struct {
 
 func NewBlogPopularityDataBaseService() domain.IPopularityRepository {
 	connection, err := Connect()
-
+	blogPopularityDbName := config.BLOG_POP_DB
+	blogPopularityDbCollName := config.BLOG_POP_COLLECTION_NAME
 	if err != nil {
 		log.Fatal("can't initailize ", blogPopularityDbName, " Database")
 	}
@@ -232,7 +242,7 @@ func (bldb *PopularityDB) UserLikeBlogByID(blogID primitive.ObjectID, userID pri
 	if err != nil {
 		return err
 	} else if updateRes.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no like were made %t", blogID, revert)
+		return fmt.Errorf("no blog found with ID %s to update OR no like were made >%t<", blogID, revert)
 	}
 	return nil
 }
@@ -256,39 +266,78 @@ func (bldb *PopularityDB) UserDisLikeBlogByID(blogID primitive.ObjectID, userID 
 	if err != nil {
 		return err
 	} else if updateRes.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no dislike were made %t", blogID, revert)
+		return fmt.Errorf("no blog found with ID %s to update OR no dislike were made >%t<", blogID, revert)
 	}
 	return nil
 }
 func (bldb *PopularityDB) CommentBlogByID(blogID primitive.ObjectID, commentDTO *domain.CommentDTO) error {
+	// First, try to update an existing comment.
 	commentFilter := bson.M{
 		"blog_id":      blogID,
-		"comments._id": commentDTO.UserID,
+		"comments._id": commentDTO.CommentID,
 	}
+	log.Printf("==> INSIDE: %+v\n", commentDTO)
 	updatedComment := bson.M{
 		"$set": bson.M{
-			"comments.$._id":       commentDTO.UserID,
+			"comments.$._id":       commentDTO.CommentID,
+			"comments.$.owner_id":  commentDTO.OwnerID,
 			"comments.$.user_name": commentDTO.UserName,
 			"comments.$.comment":   commentDTO.Comment,
 		},
 	}
-	//? if the comment was found in that blog it will update it other wise it will create a new comment
-	opts := options.Update().SetUpsert(true)
-	result, err := bldb.Coll.UpdateOne(bldb.Contxt, commentFilter, updatedComment, opts)
+
+	updateResult, err := bldb.Coll.UpdateOne(bldb.Contxt, commentFilter, updatedComment)
 	if err != nil {
 		return err
 	}
-	if result.ModifiedCount == 0 {
-		return fmt.Errorf("no blog found with ID %s to update OR no comment were made", blogID)
+	log.Printf("==> %+v", *updateResult)
+
+	// If no comment was updated, and there were no comment matched it means it doesn't exist, so we insert it. I think the MatchedCount would work fine without the ModifedCount checking...... but just in case
+	if updateResult.ModifiedCount == 0 { //? && updateResult.MatchedCount <= 0  //! After Yohanna showed me the youtube commenting dupplication is allowed
+
+		// The filter is for the blog itself.
+		insertFilter := bson.M{"blog_id": blogID}
+
+		// The update operation uses $push to add a new comment to the array.
+		newComment := bson.M{
+			"$push": bson.M{
+				"comments": bson.M{
+					"_id":       primitive.NewObjectID(),
+					"owner_id":  commentDTO.OwnerID,
+					"user_name": commentDTO.UserName,
+					"comment":   commentDTO.Comment,
+				},
+			},
+		}
+
+		// Use SetUpsert(true) to create the blog document if it doesn't exist.
+		opts := options.Update().SetUpsert(true)
+
+		insertResult, err := bldb.Coll.UpdateOne(bldb.Contxt, insertFilter, newComment, opts)
+		if err != nil {
+			return err
+		}
+
+		if insertResult.ModifiedCount == 0 && insertResult.UpsertedCount == 0 {
+			return fmt.Errorf("could not update or insert comment")
+		}
 	}
+
 	return nil
 }
-func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) error {
-	_, err := bldb.Coll.InsertOne(bldb.Contxt, domain.PopularityDTO{BlogID: blogID})
-	if err != nil {
-		return err
+func (bldb *PopularityDB) CreateBlogPopularity(blogID primitive.ObjectID) (*domain.PopularityDTO, error) {
+	newDTOBlogPopularity := domain.PopularityDTO{
+		BlogID:   blogID,
+		Likes:    make([]string, 0),
+		Dislikes: make([]string, 0),
+		Comments: make([]*domain.CommentDTO, 0),
 	}
-	return nil
+	insertInfo, err := bldb.Coll.InsertOne(bldb.Contxt, newDTOBlogPopularity)
+	if err != nil {
+		return nil, err
+	}
+	newDTOBlogPopularity.PopularityID = insertInfo.InsertedID.(primitive.ObjectID)
+	return &newDTOBlogPopularity, nil
 }
 func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error {
 	filter := bson.M{"blog_id": blogID}
@@ -304,7 +353,29 @@ func (bldb *PopularityDB) IncreaseBlogViewByID(blogID primitive.ObjectID) error 
 	}
 	return nil
 }
+func (bldb *PopularityDB) BlogPostViewCountByID(blogID primitive.ObjectID) (int, error) {
+	if res, err := bldb.GetPopularityBlogByID(blogID); err != nil {
+		return 0, err
+	} else {
+		return res.ViewCount, nil
+	}
+}
+func (bldb *PopularityDB) BlogPostPopularityValueByID(blogID primitive.ObjectID) (int, error) {
+	if res, err := bldb.GetPopularityBlogByID(blogID); err != nil {
+		return 0, err
+	} else {
+		return res.PopularityValue, nil
+	}
+}
+func (bldb *PopularityDB) UpdatePopularityValueByBlogID(blogID primitive.ObjectID, calculatedValue int) error {
 
+	filter := bson.M{"blog_id": blogID}
+	popValSet := bson.M{
+		"$set": bson.M{"popularity_value": calculatedValue},
+	}
+	bldb.Coll.UpdateOne(bldb.Contxt, filter, popValSet)
+	return nil
+}
 func (bldb *PopularityDB) BlogPostLikeCountByID(blogID primitive.ObjectID) (int, error) {
 	// Define the aggregation pipeline to match the document and count the 'likes' array.
 	pipeline := mongo.Pipeline{
@@ -463,6 +534,47 @@ func (bldb *PopularityDB) BlogPostCommentCountByID(blogID primitive.ObjectID) (i
 		return 0, nil
 	}
 	return results[0].Count, nil
+}
+func (bldb *PopularityDB) GetPopularityBlogByID(blogID primitive.ObjectID) (*domain.PopularityDTO, error) {
+	filter := bson.M{"blog_id": blogID}
+	var popBlog domain.PopularityDTO
+	err := bldb.Coll.FindOne(bldb.Contxt, filter).Decode(&popBlog)
+	if err != nil {
+		return nil, err
+	}
+	return &popBlog, nil
+}
+func (bldb *PopularityDB) GetPopularityByFilter(order int, pageNumber int) ([]*domain.PopularityDTO, error) {
+	pageSize := config.BLOGS_PER_PAGE_INT
+	skip := int64((pageNumber - 1) * pageSize)
+	limit := int64(pageSize)
+	if !(order == ASC || order == DESC) {
+		order = DESC
+	}
+	filter := bson.M{}
+	findOptions := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "popularity_value", Value: order}})
+
+	cursor, err := bldb.Coll.Find(bldb.Contxt, filter, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("error getting filtered Popularity: %w", err)
+	}
+	defer cursor.Close(bldb.Contxt)
+
+	var blogs []*domain.PopularityDTO
+	for cursor.Next(bldb.Contxt) {
+		var blogDTO domain.PopularityDTO // Change target type to DTO for decoding
+
+		if err := cursor.Decode(&blogDTO); err != nil {
+			return nil, fmt.Errorf("error decoding filtered Popularity DTO: %w", err)
+		}
+
+		blogs = append(blogs, &blogDTO)
+	}
+
+	if err = cursor.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating through filtered Popularity cursor: %w", err)
+	}
+	return blogs, nil
 }
 
 func (bldb *PopularityDB) CloseDataBase() error {

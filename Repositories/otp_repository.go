@@ -2,7 +2,10 @@ package repositories
 
 import (
 	domain "blog_starter_project_g66/Domain"
+	"blog_starter_project_g66/config"
 	"context"
+	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,12 +14,21 @@ import (
 
 type UserOTPRepository struct {
 	collection *mongo.Collection
+	Contxt     context.Context
+	Client     *mongo.Client
 }
 
-func NewUserOTPRepository(dbClient *MongoDBClient) *UserOTPRepository {
-	db := dbClient.Client.Database("user_db")
+func NewUserOTPRepository() domain.IUserOTPRepository {
+	userDB := config.USER_DB
+	connection, err := Connect()
+	if err != nil {
+		log.Fatal("can't initailize ", "OTP", " Database")
+	}
+	coll := connection.Client.Database(userDB).Collection(config.USER_OTP_COLLECTION_NAME)
 	return &UserOTPRepository{
-		collection: db.Collection("usersOTP"),
+		collection: coll,
+		Contxt:     context.TODO(),
+		Client:     connection.Client,
 	}
 }
 
@@ -40,4 +52,15 @@ func (r *UserOTPRepository) FindOTP(email string) (*domain.UserUnverified, error
 func (r *UserOTPRepository) DeleteOTP(email string) error {
 	_, err := r.collection.DeleteOne(context.Background(), bson.M{"email": email})
 	return err
+}
+
+func (r *UserOTPRepository) CloseDataBase() error {
+	if r.Client == nil {
+		return nil // Nothing to close
+	}
+	if err := r.Client.Disconnect(r.Contxt); err != nil {
+		return fmt.Errorf("error disconnecting from MongoDB: %w", err)
+	}
+	log.Println("Disconnected from Blog MongoDB.")
+	return nil
 }

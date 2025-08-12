@@ -11,20 +11,20 @@ const (
 )
 
 type AuthTokens struct {
-	AccessToken  string 
-	RefreshToken string 
+	AccessToken  string
+	RefreshToken string
 }
 type RefreshToken struct {
-	UserID    string   
-	Token     string    
-	ExpiresAt time.Time 
+	UserID    string
+	Token     string
+	ExpiresAt time.Time
 }
 type UserUnverified struct {
-	UserName string 
-	Email string
-	OTP string
-	Password string
-	Role string
+	UserName  string
+	Email     string
+	OTP       string
+	Password  string
+	Role      string
 	ExpiresAt time.Time
 }
 
@@ -48,10 +48,11 @@ type Blog struct {
 }
 
 type Popularity struct {
-	ViewCount int
-	Likes     []string
-	Dislikes  []string
-	Comments  []*Comment
+	PopularityValue int //? Lately added for the sake of calculating the popularity
+	ViewCount       int
+	Likes           []string
+	Dislikes        []string
+	Comments        []*Comment
 }
 
 type Comment struct {
@@ -61,9 +62,9 @@ type Comment struct {
 
 // I added the filter struct, b/c while filtering I was passing around 4 parameters at once so now 5 of them are in one struct it will be easy to pass arguments
 type Filter struct {
-	Popularity_value int
+	Popularity_value int // it should be either ascending or descending
 	Tag              string
-	AfterDate        time.Time
+	AfterDate        *time.Time
 	AuthorName       string
 	Title            string
 }

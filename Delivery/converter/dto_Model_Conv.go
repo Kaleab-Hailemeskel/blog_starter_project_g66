@@ -1,10 +1,10 @@
 package conv
 
 import (
-	"blog_starter_project_g66/Domain"
+	domain "blog_starter_project_g66/Domain"
 )
 
-func ChangeToDTOUserfunc(domainUser *domain.User) *domain.UserDTO {
+func ChangeToDTOUser(domainUser *domain.User) *domain.UserDTO {
 	return &domain.UserDTO{
 		UserName:       domainUser.UserName,
 		PersonalBio:    domainUser.PersonalBio,
@@ -49,19 +49,21 @@ func ChangeToDTOBlog(bdto *domain.Blog) *domain.BlogDTO {
 }
 func ChangeToDomainPopularity(pdto *domain.PopularityDTO) *domain.Popularity {
 	return &domain.Popularity{
-		ViewCount: pdto.ViewCount,
-		Likes:     pdto.Likes,
-		Dislikes:  pdto.Dislikes,
-		Comments:  ChangeToListDomainComment(pdto.Comments),
+		PopularityValue: pdto.PopularityValue,
+		ViewCount:       pdto.ViewCount,
+		Likes:           pdto.Likes,
+		Dislikes:        pdto.Dislikes,
+		Comments:        ChangeToListDomainComment(pdto.Comments),
 	}
 }
 
 func ChangeToDTOPopularity(pdto *domain.Popularity) *domain.PopularityDTO {
 	return &domain.PopularityDTO{
-		ViewCount: pdto.ViewCount,
-		Likes:     pdto.Likes,
-		Dislikes:  pdto.Dislikes,
-		Comments:  ChangeToListDTOComment(pdto.Comments),
+		PopularityValue: pdto.PopularityValue,
+		ViewCount:       pdto.ViewCount,
+		Likes:           pdto.Likes,
+		Dislikes:        pdto.Dislikes,
+		Comments:        ChangeToListDTOComment(pdto.Comments),
 	}
 }
 func ChangeToDomainComment(cdto *domain.CommentDTO) *domain.Comment {
@@ -91,23 +93,23 @@ func ChangeToListDTOComment(lctdo []*domain.Comment) []*domain.CommentDTO {
 	}
 	return listDTOComment
 }
-func ChangeToDomainVerification(udto *domain.UserUnverifiedDTO) *domain.UserUnverified{
-    return &domain.UserUnverified{
-		UserName: udto.UserName,
-        Email:     udto.Email,
-        OTP:       udto.OTP,
-		Password: udto.Password,
-		Role: udto.Role,
-        ExpiresAt: udto.ExpiresAt,
-    }
+func ChangeToDomainVerification(udto *domain.UserUnverifiedDTO) *domain.UserUnverified {
+	return &domain.UserUnverified{
+		UserName:  udto.UserName,
+		Email:     udto.Email,
+		OTP:       udto.OTP,
+		Password:  udto.Password,
+		Role:      udto.Role,
+		ExpiresAt: udto.ExpiresAt,
+	}
 }
 
-func ChangeUnverfiedToVerified(u *domain.UserUnverifiedDTO) *domain.User{
-	return&domain.User{
+func ChangeUnverfiedToVerified(u *domain.UserUnverifiedDTO) *domain.User {
+	return &domain.User{
 		UserName: u.UserName,
-		Email: u.Email,
+		Email:    u.Email,
 		Password: u.Password,
-		Role: u.Role,
+		Role:     u.Role,
 	}
 }
 func ChangeToDomainAuthTokens(dto *domain.AuthTokensDTO) *domain.AuthTokens {

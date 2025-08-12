@@ -2,11 +2,13 @@ package routers
 
 import (
 	"blog_starter_project_g66/Delivery/controllers"
+	infrastructure "blog_starter_project_g66/Infrastructure"
 
 	"github.com/gin-gonic/gin"
+	
 )
 
-func Router(uc *controllers.UserController, pc *controllers.PasswordController, ctl *controllers.UserController) {
+func Router(uc *controllers.UserController, pc *controllers.PasswordController, bc *controllers.BlogController, auth *infrastructure.AuthMiddleware, ai *controllers.AIController) {
 	router := gin.Default()
 
 	router.POST("/login",uc.HandleLogin)
@@ -15,24 +17,43 @@ func Router(uc *controllers.UserController, pc *controllers.PasswordController, 
 	router.POST("/registration/verification",uc.RegistrationValidation )
 	router.POST("/forgot_password",pc.ForgotPassword)
 	router.PUT("/reset_password", pc.ResetPassword)
-	router.POST("/promote_user", ctl.PromoteUser)
-	router.POST("/demote_user", ctl.DemoteUser)
-	router.POST("/logout",)
-	router.PUT("/editprofile")
-	router.POST("/blog",)
-	router.GET("/blog",)
-	router.GET("/blog/filter",)
-	// router.POST("/foget_password",)
-	router.POST("/logout",uc.HandleLogout)
-	// router.PUT("/editprofile")
-	// router.POST("/blog",)
-	// router.GET("/blog",)
-	// router.GET("/blog/filter",)
-	// router.PUT("/blog/:id",)
-	// router.DELETE("/blog/:id",)
-	// router.POST("/blog/sreach",)
-	// router.POST("/ai",)
-	// router.POST("/ai/:id",)
+
+	blogRoutes := router.Group("/blog")
+	blogRoutes.Use(auth.JWTAuthMiddleware())
+	{
+		blogRoutes.POST("", bc.CreateBlog)     
+		blogRoutes.GET("", bc.FilterBlog)           
+		blogRoutes.PUT("/:id", bc.UpdateBlog)      
+		blogRoutes.DELETE("/:id", bc.DeleteBlog)   
+	}
+
+	adminRoutes := router.Group("/")
+	adminRoutes.Use(auth.JWTAuthMiddleware(), infrastructure.RoleMiddleware("SUPER_ADMIN"))
+	{
+		adminRoutes.POST("/promote_user", uc.PromoteUser)
+		adminRoutes.POST("/demote_user", uc.DemoteUser)
+	}
+
+	userRoutes := router.Group("/user")
+	userRoutes.Use(auth.JWTAuthMiddleware())
+	{
+		userRoutes.POST("/logout",uc.HandleLogout)
+		userRoutes.PUT("/edit_profile", uc.UpdateProfile)
+	}
+	
+	AIRoutes := router.Group("/ai")
+	AIRoutes.Use(auth.JWTAuthMiddleware())
+	{	
+		AIRoutes.GET("/comment",ai.HandleAIComment)
+		AIRoutes.GET("/:id",ai.HandleAIBog)
+		AIRoutes.GET("/filter",ai.HandleAIFilter)
+	}
+	
+
+
+	router.GET("/auth/:provider", uc.SignInWithProvider)
+	router.GET("/auth/:provider/callback", uc.CallbackHandler)
+	router.GET("/success", uc.Success)
 
 	router.Run()
 }
